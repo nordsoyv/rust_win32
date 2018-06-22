@@ -85,8 +85,8 @@ struct Window {
 }
 
 struct GameState {
-    frame : u32,
-    game_start_time : Instant,
+    frame: u32,
+    game_start_time: Instant,
     frame_start_time: Instant,
     last_frame_time: Duration,
 }
@@ -94,10 +94,10 @@ struct GameState {
 impl GameState {
     fn new() -> GameState {
         GameState {
-            frame : 0,
-            game_start_time : Instant::now(),
-            frame_start_time : Instant::now(),
-            last_frame_time: Duration::new(0,0),
+            frame: 0,
+            game_start_time: Instant::now(),
+            frame_start_time: Instant::now(),
+            last_frame_time: Duration::new(0, 0),
         }
     }
 }
@@ -213,17 +213,23 @@ fn handle_messages(window: &mut Window) -> bool {
 }
 
 
-fn main_loop(window: &mut Window, game_state : &mut GameState) -> bool {
-    if handle_messages( window) {
+fn main_loop(window: &mut Window, game_state: &mut GameState) -> bool {
+    if handle_messages(window) {
         return true;
     }
     game_state.frame += 1;
     game_state.last_frame_time = game_state.frame_start_time.elapsed();
     game_state.frame_start_time = Instant::now();
-    if game_state.frame % 100000 == 0 {
-        println!("Frame {} " , game_state.frame);
-        println!("Time taken for last frame: {:?}", game_state.last_frame_time);
-        println!("Total time taken {:?}", game_state.game_start_time.elapsed());
+//    if game_state.frame % 100000 == 0 {
+    println!("Frame {} ", game_state.frame);
+    println!("Time taken for last frame: {:?}", game_state.last_frame_time);
+    println!("Total time taken {:?}", game_state.game_start_time.elapsed());
+    //  }
+
+    let frame_time = game_state.last_frame_time.subsec_millis();
+    if frame_time < 16 {
+        let sleep_time = Duration::from_millis((16 - frame_time).into());
+        std::thread::sleep(sleep_time);
     }
 
     return false;
