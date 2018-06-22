@@ -66,6 +66,9 @@ use self::winapi::um::winuser::{
 
 use self::winapi::um::wincon::GetConsoleWindow;
 
+use std::time::Instant;
+use std::time::Duration;
+
 // ----------------------------------------------------
 
 // We have to encode text to wide format for Windows
@@ -83,6 +86,20 @@ struct Window {
 
 struct GameState {
     frame : u32,
+    game_start_time : Instant,
+    frame_start_time: Instant,
+    last_frame_time: Duration,
+}
+
+impl GameState {
+    fn new() -> GameState {
+        GameState {
+            frame : 0,
+            game_start_time : Instant::now(),
+            frame_start_time : Instant::now(),
+            last_frame_time: Duration::new(0,0),
+        }
+    }
 }
 
 fn hide_console_window() {
@@ -113,6 +130,7 @@ pub unsafe extern "system" fn window_proc(hwnd: HWND,
             EndPaint(hwnd, lp_paint_struct);
         }
         WM_DESTROY => {
+            println!("QUIT!");
             PostQuitMessage(0);
         }
         _ => {
@@ -184,7 +202,7 @@ fn handle_messages(window: &mut Window) -> bool {
         let mut message: MSG = mem::uninitialized();
 
         while PeekMessageW(&mut message as *mut MSG, window.handle, 0, 0, PM_REMOVE) > 0 {
-            if message.message == WM_QUIT {
+            if message.message == 161 {
                 return true;
             }
             TranslateMessage(&message as *const MSG); // Translate message into something meaningful with TranslateMessage
@@ -200,8 +218,12 @@ fn main_loop(window: &mut Window, game_state : &mut GameState) -> bool {
         return true;
     }
     game_state.frame += 1;
-    if game_state.frame % 1000 == 0 {
+    game_state.last_frame_time = game_state.frame_start_time.elapsed();
+    game_state.frame_start_time = Instant::now();
+    if game_state.frame % 100000 == 0 {
         println!("Frame {} " , game_state.frame);
+        println!("Time taken for last frame: {:?}", game_state.last_frame_time);
+        println!("Total time taken {:?}", game_state.game_start_time.elapsed());
     }
 
     return false;
@@ -213,7 +235,7 @@ fn main() {
     hide_console_window();
 
     let mut window = create_window("my_window", "Portfolio manager pro").unwrap();
-    let mut game_state = GameState {frame: 0 };
+    let mut game_state = GameState::new();
     loop {
         if main_loop(&mut window, &mut game_state) {
             break;
