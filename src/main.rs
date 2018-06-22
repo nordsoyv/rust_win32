@@ -1,5 +1,5 @@
 // Let's put this so that it won't open console
-#![windows_subsystem = "windows"]
+//#![windows_subsystem = "windows"]
 
 #[cfg(windows)]
 extern crate winapi;
@@ -13,22 +13,17 @@ use std::mem;
 use std::ptr::null_mut;
 use std::io::Error;
 
-use libc::c_int;
-
 use self::winapi::shared::windef::{
     HWND,
     RECT,
     LPRECT,
     HDC,
-    HMENU,
 };
 use self::winapi::shared::minwindef::{
     LPARAM,
     WPARAM,
     UINT,
     LRESULT,
-    HINSTANCE,
-    DWORD,
 };
 
 use self::winapi::um::libloaderapi::GetModuleHandleW;
@@ -39,12 +34,13 @@ use self::winapi::um::winuser::{
     TranslateMessage,
     DispatchMessageW,
     GetMessageW,
+    PeekMessageW,
     PostQuitMessage,
-    GetWindowLongW,
     BeginPaint,
     GetClientRect,
     DrawTextW,
     EndPaint,
+    ShowWindow,
 };
 use self::winapi::um::winuser::{
     MSG,
@@ -59,15 +55,16 @@ use self::winapi::um::winuser::{
     DT_CENTER,
     DT_VCENTER,
     DT_SINGLELINE,
-    BS_DEFPUSHBUTTON,
-    WS_CHILD,
-    GWL_HINSTANCE,
     PAINTSTRUCT,
     WM_PAINT,
     WM_DESTROY,
     WM_CREATE,
+    WM_QUIT,
+    PM_REMOVE,
+    SW_HIDE,
 };
 
+use self::winapi::um::wincon::GetConsoleWindow;
 
 // ----------------------------------------------------
 
@@ -78,31 +75,21 @@ fn win32_string(value: &str) -> *const u16 {
     return v.as_ptr();
 }
 
-fn create_handle(dw_ex_style: DWORD, lp_class_name: &str, lp_window_name: &str, dw_style: DWORD, x: c_int,
-                 y: c_int, n_width: c_int, n_height: c_int, hwnd_parent: HWND, handle: Handle,
-                 hInstance: HINSTANCE) -> HWND {
-    unsafe {
-        return CreateWindowExW(dw_ex_style, win32_string(lp_class_name), win32_string(lp_window_name), dw_style,
-                               x, y, n_width, n_height, hwnd_parent, handle.value(), hInstance, std::ptr::null_mut());
-    }
-}
-
 // Window struct
 #[cfg(windows)]
 struct Window {
     handle: HWND,
 }
 
-enum Handle {
-    Button,
-    Window,
+struct GameState {
+    frame : u32,
 }
 
-impl Handle {
-    fn value(&self) -> HMENU {
-        match *self {
-            Handle::Button => 1001 as HMENU,
-            Handle::Window => 0 as HMENU,
+fn hide_console_window() {
+    unsafe {
+        let window = GetConsoleWindow();
+        if window != std::ptr::null_mut() {
+            ShowWindow(window, SW_HIDE);
         }
     }
 }
@@ -113,19 +100,11 @@ pub unsafe extern "system" fn window_proc(hwnd: HWND,
     let hdc: HDC;
     let lp_paint_struct: LPPAINTSTRUCT = libc::malloc(mem::size_of::<PAINTSTRUCT>() as libc::size_t) as *mut PAINTSTRUCT;
     let lp_rect: LPRECT = libc::malloc(mem::size_of::<RECT>() as libc::size_t) as *mut RECT;
-    let button_dont_press_me: HWND;
-    let button_press_me: HWND;
 
 
     match msg {
         WM_CREATE => {
-            let h_instance = GetWindowLongW(hwnd, GWL_HINSTANCE) as HINSTANCE;
-            button_dont_press_me = create_handle(0, "Button", "Don't press me",
-                                              WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 100, 200, 50, 20,
-                                              hwnd, Handle::Button, h_instance);
-            button_press_me = create_handle(0, "Button", "Press me",
-                                          WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 200, 200, 50, 20,
-                                          hwnd, Handle::Button, h_instance);
+            println!("Created window")
         }
         WM_PAINT => {
             hdc = BeginPaint(hwnd, lp_paint_struct);
@@ -199,28 +178,44 @@ fn create_window(name: &str, title: &str) -> Result<Window, Error> {
 #[cfg(windows)]
 // Create message handling function with which to link to hook window to Windows messaging system
 // More info: https://msdn.microsoft.com/en-us/library/windows/desktop/ms644927(v=vs.85).aspx
-fn handle_message(window: &mut Window) -> bool {
+// returns true if quit is called
+fn handle_messages(window: &mut Window) -> bool {
     unsafe {
         let mut message: MSG = mem::uninitialized();
 
-        // Get message from message queue with GetMessageW
-        if GetMessageW(&mut message as *mut MSG, window.handle, 0, 0) > 0 {
+        while PeekMessageW(&mut message as *mut MSG, window.handle, 0, 0, PM_REMOVE) > 0 {
+            if message.message == WM_QUIT {
+                return true;
+            }
             TranslateMessage(&message as *const MSG); // Translate message into something meaningful with TranslateMessage
             DispatchMessageW(&message as *const MSG); // Dispatch message with DispatchMessageW
-
-            true
-        } else {
-            false
         }
+        return false;
     }
 }
 
+
+fn main_loop(window: &mut Window, game_state : &mut GameState) -> bool {
+    if handle_messages( window) {
+        return true;
+    }
+    game_state.frame += 1;
+    if game_state.frame % 1000 == 0 {
+        println!("Frame {} " , game_state.frame);
+    }
+
+    return false;
+}
+
+
 #[cfg(windows)]
 fn main() {
-    let mut window = create_window("my_window", "Portfolio manager pro").unwrap();
+    hide_console_window();
 
+    let mut window = create_window("my_window", "Portfolio manager pro").unwrap();
+    let mut game_state = GameState {frame: 0 };
     loop {
-        if !handle_message(&mut window) {
+        if main_loop(&mut window, &mut game_state) {
             break;
         }
     }
