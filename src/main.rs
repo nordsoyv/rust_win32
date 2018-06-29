@@ -6,6 +6,12 @@ extern crate winapi;
 extern crate libc;
 // https://docs.rs/winapi/*/x86_64-pc-windows-msvc/winapi/um/libloaderapi/index.html?search=winuser
 
+mod game;
+
+use game::GameState;
+use game::game_loop;
+
+
 use std::ffi::OsStr;
 use std::os::windows::ffi::OsStrExt;
 use std::iter::once;
@@ -33,7 +39,6 @@ use self::winapi::um::winuser::{
     CreateWindowExW,
     TranslateMessage,
     DispatchMessageW,
-    GetMessageW,
     PeekMessageW,
     PostQuitMessage,
     BeginPaint,
@@ -60,7 +65,6 @@ use self::winapi::um::winuser::{
     WM_PAINT,
     WM_DESTROY,
     WM_CREATE,
-    WM_QUIT,
     PM_REMOVE,
     SW_HIDE,
     VK_ESCAPE,
@@ -68,8 +72,8 @@ use self::winapi::um::winuser::{
 
 use self::winapi::um::wincon::GetConsoleWindow;
 
-use std::time::Instant;
 use std::time::Duration;
+use std::time::Instant;
 
 // ----------------------------------------------------
 
@@ -86,57 +90,6 @@ struct Window {
     handle: HWND,
 }
 
-struct GameState {
-    frame: u32,
-    input: GameInput,
-    time : GameTime,
-}
-
-struct GameInput {
-    up_key: bool,
-    down_key: bool,
-    left_key: bool,
-    right_key: bool,
-    quit_key: bool,
-}
-
-struct GameTime {
-    game_start_time: Instant,
-    frame_start_time: Instant,
-    last_frame_time: Duration,
-}
-
-impl GameInput {
-    fn new() -> GameInput {
-        GameInput {
-            down_key: false,
-            left_key: false,
-            quit_key: false,
-            right_key: false,
-            up_key: false,
-        }
-    }
-}
-
-impl GameState {
-    fn new() -> GameState {
-        GameState {
-            input: GameInput::new(),
-            frame: 0,
-            time : GameTime::new(),
-        }
-    }
-}
-
-impl GameTime {
-    fn new() -> GameTime {
-        GameTime {
-            game_start_time: Instant::now(),
-            frame_start_time: Instant::now(),
-            last_frame_time: Duration::new(0, 0),
-        }
-    }
-}
 fn hide_console_window() {
     unsafe {
         let window = GetConsoleWindow();
@@ -158,12 +111,12 @@ pub unsafe extern "system" fn window_proc(hwnd: HWND,
         WM_CREATE => {
             println!("Created window")
         }
-        WM_PAINT => {
-            hdc = BeginPaint(hwnd, lp_paint_struct);
-            GetClientRect(hwnd, lp_rect);
-            DrawTextW(hdc, win32_string("Done with pride and prejudice by Culeva Alex"), -1, lp_rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
-            EndPaint(hwnd, lp_paint_struct);
-        }
+//        WM_PAINT => {
+//            hdc = BeginPaint(hwnd, lp_paint_struct);
+//            GetClientRect(hwnd, lp_rect);
+//            DrawTextW(hdc, win32_string("Done with pride and prejudice by Culeva Alex"), -1, lp_rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+//            EndPaint(hwnd, lp_paint_struct);
+//        }
         WM_DESTROY => {
             println!("QUIT!");
             PostQuitMessage(0);
@@ -213,8 +166,8 @@ fn create_window(name: &str, title: &str) -> Result<Window, Error> {
             WS_OVERLAPPEDWINDOW | WS_VISIBLE,    // dwStyle
             CW_USEDEFAULT,                        // Int x
             CW_USEDEFAULT,                        // Int y
-            CW_USEDEFAULT,                        // Int nWidth
-            CW_USEDEFAULT,                        // Int nHeight
+            960,                        // Int nWidth
+            540,                        // Int nHeight
             null_mut(),                            // hWndParent
             null_mut(),                            // hMenu
             h_instance,                            // hInstance
@@ -264,40 +217,41 @@ fn get_input(game_state: &mut GameState) {
     }
 }
 
+fn render(game_state: &mut GameState, window: &mut Window) {
+    unsafe {
+        let hdc: HDC;
+        let lp_paint_struct: LPPAINTSTRUCT = libc::malloc(mem::size_of::<PAINTSTRUCT>() as libc::size_t) as *mut PAINTSTRUCT;
+        let lp_rect: LPRECT = libc::malloc(mem::size_of::<RECT>() as libc::size_t) as *mut RECT;
+        hdc = BeginPaint(window.handle, lp_paint_struct);
+        GetClientRect(window.handle, lp_rect);
+        DrawTextW(hdc, win32_string("Done with pride and prejudice by Culeva Alex!!!"), -1, lp_rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+        EndPaint(window.handle, lp_paint_struct);
+    }
+}
 
 fn main_loop(window: &mut Window, game_state: &mut GameState) -> bool {
     if handle_messages(window) {
         return true;
     }
-    get_input(game_state);
-    if game_state.input.quit_key {
-        return true;
-    }
+
     game_state.frame += 1;
     game_state.time.last_frame_time = game_state.time.frame_start_time.elapsed();
     game_state.time.frame_start_time = Instant::now();
-    if game_state.input.up_key {
-        println!("UP");
-    }
-    if game_state.input.down_key {
-        println!("DOWN");
-    }
-    if game_state.input.left_key {
-        println!("LEFT");
-    }
-    if game_state.input.right_key {
-        println!("RIGHT");
+
+    get_input(game_state);
+
+
+    let continue_running = game_loop(game_state);
+    if !continue_running {
+        return true;
     }
 
-//    if game_state.frame % 100000 == 0 {
-    //println!("Frame {} ", game_state.frame);
-    //println!("Time taken for last frame: {:?}", game_state.last_frame_time);
-    //println!("Total time taken {:?}", game_state.game_start_time.elapsed());
-    //  }
-
-    let frame_time = game_state.time.last_frame_time.subsec_millis();
-    if frame_time < 16 {
-        let sleep_time = Duration::from_millis((16 - frame_time).into());
+    println!("{:?}", game_state.player);
+    render(game_state, window);
+    let frame_time = game_state.time.frame_start_time.elapsed();
+    if frame_time < Duration::from_millis(15) {
+        let sleep_time = Duration::from_millis((15 - frame_time.subsec_millis()).into());
+        //println!("Sleeping for {:?}", sleep_time);
         std::thread::sleep(sleep_time);
     }
 
