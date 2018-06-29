@@ -41,6 +41,7 @@ use self::winapi::um::winuser::{
     DrawTextW,
     EndPaint,
     ShowWindow,
+    GetAsyncKeyState,
 };
 use self::winapi::um::winuser::{
     MSG,
@@ -62,6 +63,7 @@ use self::winapi::um::winuser::{
     WM_QUIT,
     PM_REMOVE,
     SW_HIDE,
+    VK_ESCAPE,
 };
 
 use self::winapi::um::wincon::GetConsoleWindow;
@@ -86,22 +88,55 @@ struct Window {
 
 struct GameState {
     frame: u32,
+    input: GameInput,
+    time : GameTime,
+}
+
+struct GameInput {
+    up_key: bool,
+    down_key: bool,
+    left_key: bool,
+    right_key: bool,
+    quit_key: bool,
+}
+
+struct GameTime {
     game_start_time: Instant,
     frame_start_time: Instant,
     last_frame_time: Duration,
 }
 
+impl GameInput {
+    fn new() -> GameInput {
+        GameInput {
+            down_key: false,
+            left_key: false,
+            quit_key: false,
+            right_key: false,
+            up_key: false,
+        }
+    }
+}
+
 impl GameState {
     fn new() -> GameState {
         GameState {
+            input: GameInput::new(),
             frame: 0,
+            time : GameTime::new(),
+        }
+    }
+}
+
+impl GameTime {
+    fn new() -> GameTime {
+        GameTime {
             game_start_time: Instant::now(),
             frame_start_time: Instant::now(),
             last_frame_time: Duration::new(0, 0),
         }
     }
 }
-
 fn hide_console_window() {
     unsafe {
         let window = GetConsoleWindow();
@@ -193,6 +228,13 @@ fn create_window(name: &str, title: &str) -> Result<Window, Error> {
     }
 }
 
+fn is_quit_message(msg: MSG) -> bool {
+    if msg.message == 161 {
+        return true;
+    }
+    false
+}
+
 #[cfg(windows)]
 // Create message handling function with which to link to hook window to Windows messaging system
 // More info: https://msdn.microsoft.com/en-us/library/windows/desktop/ms644927(v=vs.85).aspx
@@ -202,7 +244,7 @@ fn handle_messages(window: &mut Window) -> bool {
         let mut message: MSG = mem::uninitialized();
 
         while PeekMessageW(&mut message as *mut MSG, window.handle, 0, 0, PM_REMOVE) > 0 {
-            if message.message == 161 {
+            if is_quit_message(message) { // QUIT
                 return true;
             }
             TranslateMessage(&message as *const MSG); // Translate message into something meaningful with TranslateMessage
@@ -212,21 +254,48 @@ fn handle_messages(window: &mut Window) -> bool {
     }
 }
 
+fn get_input(game_state: &mut GameState) {
+    unsafe {
+        game_state.input.quit_key = GetAsyncKeyState(VK_ESCAPE) != 0;
+        game_state.input.left_key = GetAsyncKeyState(0x41) != 0;
+        game_state.input.right_key = GetAsyncKeyState(0x44) != 0;
+        game_state.input.down_key = GetAsyncKeyState(0x53) != 0;
+        game_state.input.up_key = GetAsyncKeyState(0x57) != 0;
+    }
+}
+
 
 fn main_loop(window: &mut Window, game_state: &mut GameState) -> bool {
     if handle_messages(window) {
         return true;
     }
+    get_input(game_state);
+    if game_state.input.quit_key {
+        return true;
+    }
     game_state.frame += 1;
-    game_state.last_frame_time = game_state.frame_start_time.elapsed();
-    game_state.frame_start_time = Instant::now();
+    game_state.time.last_frame_time = game_state.time.frame_start_time.elapsed();
+    game_state.time.frame_start_time = Instant::now();
+    if game_state.input.up_key {
+        println!("UP");
+    }
+    if game_state.input.down_key {
+        println!("DOWN");
+    }
+    if game_state.input.left_key {
+        println!("LEFT");
+    }
+    if game_state.input.right_key {
+        println!("RIGHT");
+    }
+
 //    if game_state.frame % 100000 == 0 {
-    println!("Frame {} ", game_state.frame);
-    println!("Time taken for last frame: {:?}", game_state.last_frame_time);
-    println!("Total time taken {:?}", game_state.game_start_time.elapsed());
+    //println!("Frame {} ", game_state.frame);
+    //println!("Time taken for last frame: {:?}", game_state.last_frame_time);
+    //println!("Total time taken {:?}", game_state.game_start_time.elapsed());
     //  }
 
-    let frame_time = game_state.last_frame_time.subsec_millis();
+    let frame_time = game_state.time.last_frame_time.subsec_millis();
     if frame_time < 16 {
         let sleep_time = Duration::from_millis((16 - frame_time).into());
         std::thread::sleep(sleep_time);
