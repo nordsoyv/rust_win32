@@ -48,6 +48,7 @@ use self::winapi::um::winuser::{
   EndPaint,
   ShowWindow,
   GetAsyncKeyState,
+  GetDC,
 };
 use self::winapi::um::winuser::{
   MSG,
@@ -75,6 +76,9 @@ use self::winapi::um::wingdi::{
   BITMAPINFO,
   BITMAPINFOHEADER,
   RGBQUAD,
+  StretchDIBits,
+  DIB_RGB_COLORS,
+  SRCCOPY,
 };
 use self::winapi::um::winnt::{
   MEM_COMMIT,
@@ -108,6 +112,7 @@ fn win32_string(value: &str) -> *const u16 {
 #[cfg(windows)]
 struct Window {
   handle: HWND,
+  dc: HDC,
 }
 
 fn create_backbuffer(width: i32, height: i32) -> OffscreenBuffer {
@@ -156,13 +161,18 @@ fn hide_console_window() {
 
 fn render_gradient(back_buffer: &OffscreenBuffer, x_offset: i32, y_offset: i32) {
 //    let row = &back_buffer.memory as u8;
-  let row = &mut back_buffer.memory as *mut u8;
-  for y in 0..back_buffer.height {
-    let mut pixel: u32 = row as u32;
-    for x in 0..back_buffer.width {
-      let blue: u32 = ((x + x_offset) as u8).into();
-      let green: u32 = ((y + y_offset) as u8).into();
-      pixel = green << 8 | blue;
+  unsafe {
+    let start_of_memory = back_buffer.memory as *mut u32;
+    let mut offset = 0;
+    for y in 0..back_buffer.height {
+//    let mut pixel: u32 = row as u32;
+      for x in 0..back_buffer.width {
+        offset += 1;
+        let blue: u32 = ((x + x_offset) as u8).into();
+        let green: u32 = ((y + y_offset) as u8).into();
+        let mut pixel = start_of_memory.offset(offset);
+        *pixel = green << 8 | blue;
+      }
     }
   }
 }
@@ -244,7 +254,8 @@ fn create_window(name: &str, title: &str) -> Result<Window, Error> {
     if handle.is_null() {
       Err(Error::last_os_error())
     } else {
-      Ok(Window { handle })
+      let dc = GetDC(handle);
+      Ok(Window { handle, dc })
     }
   }
 }
@@ -285,7 +296,16 @@ fn get_input(game_state: &mut GameState) {
   }
 }
 
-fn render(game_state: &mut GameState, window: &mut Window, back_buffer: &OffscreenBuffer) {}
+fn render(game_state: &mut GameState, window: &mut Window, back_buffer: &OffscreenBuffer) {
+  render_gradient(back_buffer, game_state.player.pos_x as i32, game_state.player.pos_y as i32);
+  unsafe {
+    StretchDIBits(window.dc,
+                  0, 0, 960, 540,
+                  0, 0, back_buffer.width, back_buffer.height,
+                  back_buffer.memory, &back_buffer.info, DIB_RGB_COLORS, SRCCOPY);
+  }
+}
+
 
 fn main_loop(window: &mut Window, game_state: &mut GameState, back_buffer: &OffscreenBuffer) -> bool {
   if handle_messages(window) {
@@ -304,7 +324,7 @@ fn main_loop(window: &mut Window, game_state: &mut GameState, back_buffer: &Offs
     return true;
   }
 
-  println!("{:?}", game_state.player);
+  //println!("{:?}", game_state.player);
   render(game_state, window, back_buffer);
   let frame_time = game_state.time.frame_start_time.elapsed();
   if frame_time < Duration::from_millis(15) {
