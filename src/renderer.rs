@@ -47,14 +47,13 @@ pub struct Renderer {
 
 impl Renderer {
   pub fn new(hdc: HDC, window_width: i32, window_height: i32, back_buffer_width: i32, back_buffer_height: i32) -> Renderer {
-
     let bytes_per_pixel = 4;
     let bitmap_memory_size = back_buffer_width * back_buffer_height * bytes_per_pixel;
     unsafe {
       let buffer = OffscreenBuffer {
         width: back_buffer_width,
         height: back_buffer_height,
-        pitch: back_buffer_width * bytes_per_pixel,
+        pitch: back_buffer_width,
 
         info: BITMAPINFO {
           bmiHeader: BITMAPINFOHEADER {
@@ -89,8 +88,12 @@ impl Renderer {
     }
   }
 
-  pub fn render_frame(&self, game_state: &mut GameState ) {
+  pub fn render_frame(&self, game_state: &mut GameState) {
     self.render_gradient(game_state.player.pos_x as i32, game_state.player.pos_y as i32);
+    self.draw_rectangle(game_state.player.pos_x,
+                        game_state.player.pos_y,
+                        game_state.player.pos_x + 40.0,
+                        game_state.player.pos_y + 40.0);
     unsafe {
       StretchDIBits(self.hdc,
                     0, 0, self.window_width, self.window_height,
@@ -99,13 +102,44 @@ impl Renderer {
     }
   }
 
+  fn draw_rectangle(&self, min_x: f32, min_y: f32, max_x: f32, max_y: f32) {
+    let mut start_x = min_x as i32;
+    if start_x < 0 {
+      start_x = 0;
+    }
+    let mut start_y = min_y as i32;
+    if start_y < 0 {
+      start_y = 0;
+    }
+    let mut end_x = max_x as i32;
+    if end_x > self.back_buffer.width {
+      end_x = self.back_buffer.width;
+    }
+    let mut end_y = max_y as i32;
+    if end_y > self.back_buffer.height {
+      end_y = self.back_buffer.height;
+    }
+    unsafe {
+      let start_of_memory = self.back_buffer.memory as *mut u32;
+      for y in start_y..end_y {
+        let mut offset: isize = self.back_buffer.pitch as isize * y as isize;
+        offset += start_x as isize;
+        for _x in start_x..end_x {
+          let mut pixel = start_of_memory.offset(offset);
+          *pixel = 0xffffffff;
+
+
+          offset += 1;
+        }
+      }
+    }
+  }
+
   fn render_gradient(&self, x_offset: i32, y_offset: i32) {
-//    let row = &back_buffer.memory as u8;
     unsafe {
       let start_of_memory = self.back_buffer.memory as *mut u32;
       let mut offset = 0;
       for y in 0..self.back_buffer.height {
-//    let mut pixel: u32 = row as u32;
         for x in 0..self.back_buffer.width {
           offset += 1;
           let blue: u32 = ((x + x_offset) as u8).into();
