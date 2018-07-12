@@ -7,6 +7,7 @@ extern crate libc;
 // https://docs.rs/winapi/*/x86_64-pc-windows-msvc/winapi/um/libloaderapi/index.html?search=winuser
 
 mod game;
+mod renderer;
 
 use game::GameState;
 use game::game_loop;
@@ -30,7 +31,6 @@ use self::winapi::shared::minwindef::{
   WPARAM,
   UINT,
   LRESULT,
-  LPVOID,
 };
 
 use self::winapi::um::libloaderapi::GetModuleHandleW;
@@ -42,10 +42,7 @@ use self::winapi::um::winuser::{
   DispatchMessageW,
   PeekMessageW,
   PostQuitMessage,
-  BeginPaint,
   GetClientRect,
-  DrawTextW,
-  EndPaint,
   ShowWindow,
   GetAsyncKeyState,
   GetDC,
@@ -59,11 +56,6 @@ use self::winapi::um::winuser::{
   CW_USEDEFAULT,
   WS_OVERLAPPEDWINDOW,
   WS_VISIBLE,
-  LPPAINTSTRUCT,
-  DT_CENTER,
-  DT_VCENTER,
-  DT_SINGLELINE,
-  PAINTSTRUCT,
 //    WM_PAINT,
   WM_DESTROY,
   WM_CREATE,
@@ -72,32 +64,12 @@ use self::winapi::um::winuser::{
   VK_ESCAPE,
 };
 
-use self::winapi::um::wingdi::{
-  BITMAPINFO,
-  BITMAPINFOHEADER,
-  RGBQUAD,
-  StretchDIBits,
-  DIB_RGB_COLORS,
-  SRCCOPY,
-};
-use self::winapi::um::winnt::{
-  MEM_COMMIT,
-  PAGE_READWRITE,
-};
 
-use self::winapi::um::memoryapi::VirtualAlloc;
 use self::winapi::um::wincon::GetConsoleWindow;
 
 use std::time::Duration;
 use std::time::Instant;
-
-struct OffscreenBuffer {
-  info: BITMAPINFO,
-  width: i32,
-  height: i32,
-  pitch: i32,
-  memory: LPVOID,
-}
+use renderer::Renderer;
 
 // ----------------------------------------------------
 
@@ -115,40 +87,6 @@ struct Window {
   dc: HDC,
 }
 
-fn create_backbuffer(width: i32, height: i32) -> OffscreenBuffer {
-  unsafe {
-    let bytes_per_pixel = 4;
-    let bitmap_memory_size = width * height * bytes_per_pixel;
-    let buffer = OffscreenBuffer {
-      info: BITMAPINFO {
-        bmiHeader: BITMAPINFOHEADER {
-          biSize: mem::size_of::<BITMAPINFOHEADER>() as u32,
-          biWidth: width,
-          biHeight: height,
-          biPlanes: 1,
-          biBitCount: 32,
-          biCompression: 0,
-          biSizeImage: 0,
-          biXPelsPerMeter: 0,
-          biYPelsPerMeter: 0,
-          biClrUsed: 0,
-          biClrImportant: 0,
-        },
-        bmiColors: [RGBQUAD {
-          rgbBlue: 0,
-          rgbGreen: 0,
-          rgbRed: 0,
-          rgbReserved: 0,
-        }; 1],
-      },
-      width,
-      height,
-      pitch: width * bytes_per_pixel,
-      memory: VirtualAlloc(std::ptr::null_mut(), bitmap_memory_size as usize, MEM_COMMIT, PAGE_READWRITE),
-    };
-    return buffer;
-  }
-}
 
 fn hide_console_window() {
   unsafe {
@@ -159,32 +97,10 @@ fn hide_console_window() {
   }
 }
 
-fn render_gradient(back_buffer: &OffscreenBuffer, x_offset: i32, y_offset: i32) {
-//    let row = &back_buffer.memory as u8;
-  unsafe {
-    let start_of_memory = back_buffer.memory as *mut u32;
-    let mut offset = 0;
-    for y in 0..back_buffer.height {
-//    let mut pixel: u32 = row as u32;
-      for x in 0..back_buffer.width {
-        offset += 1;
-        let blue: u32 = ((x + x_offset) as u8).into();
-        let green: u32 = ((y + y_offset) as u8).into();
-        let mut pixel = start_of_memory.offset(offset);
-        *pixel = green << 8 | blue;
-      }
-    }
-  }
-}
 
 // window Proc
 pub unsafe extern "system" fn window_proc(hwnd: HWND,
                                           msg: UINT, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
-  let hdc: HDC;
-  let lp_paint_struct: LPPAINTSTRUCT = libc::malloc(mem::size_of::<PAINTSTRUCT>() as libc::size_t) as *mut PAINTSTRUCT;
-  let lp_rect: LPRECT = libc::malloc(mem::size_of::<RECT>() as libc::size_t) as *mut RECT;
-
-
   match msg {
     WM_CREATE => {
       println!("Created window")
@@ -255,6 +171,8 @@ fn create_window(name: &str, title: &str) -> Result<Window, Error> {
       Err(Error::last_os_error())
     } else {
       let dc = GetDC(handle);
+      let lp_rect: LPRECT = libc::malloc(mem::size_of::<RECT>() as libc::size_t) as *mut RECT;
+      GetClientRect(handle, lp_rect);
       Ok(Window { handle, dc })
     }
   }
@@ -296,18 +214,8 @@ fn get_input(game_state: &mut GameState) {
   }
 }
 
-fn render(game_state: &mut GameState, window: &mut Window, back_buffer: &OffscreenBuffer) {
-  render_gradient(back_buffer, game_state.player.pos_x as i32, game_state.player.pos_y as i32);
-  unsafe {
-    StretchDIBits(window.dc,
-                  0, 0, 960, 540,
-                  0, 0, back_buffer.width, back_buffer.height,
-                  back_buffer.memory, &back_buffer.info, DIB_RGB_COLORS, SRCCOPY);
-  }
-}
 
-
-fn main_loop(window: &mut Window, game_state: &mut GameState, back_buffer: &OffscreenBuffer) -> bool {
+fn main_loop(window: &mut Window, game_state: &mut GameState, renderer: &Renderer) -> bool {
   if handle_messages(window) {
     return true;
   }
@@ -324,8 +232,7 @@ fn main_loop(window: &mut Window, game_state: &mut GameState, back_buffer: &Offs
     return true;
   }
 
-  //println!("{:?}", game_state.player);
-  render(game_state, window, back_buffer);
+  renderer.render_frame(game_state);
   let frame_time = game_state.time.frame_start_time.elapsed();
   if frame_time < Duration::from_millis(15) {
     let sleep_time = Duration::from_millis((15 - frame_time.subsec_millis()).into());
@@ -342,10 +249,19 @@ fn main() {
   hide_console_window();
 
   let mut window = create_window("my_window", "Portfolio manager pro").unwrap();
-  let back_buffer = create_backbuffer(960, 540);
   let mut game_state = GameState::new();
+  let  client_width :i32 ;
+  let  client_height : i32 ;
+
+  unsafe {
+    let lp_rect: LPRECT = libc::malloc(mem::size_of::<RECT>() as libc::size_t) as *mut RECT;
+    GetClientRect(window.handle, lp_rect);
+    client_width = (*lp_rect).right;
+    client_height = (*lp_rect).bottom;
+  }
+  let renderer = Renderer::new(window.dc,  client_width,  client_height, 960,540);
   loop {
-    if main_loop(&mut window, &mut game_state, &back_buffer) {
+    if main_loop(&mut window, &mut game_state, &renderer) {
       break;
     }
   }
