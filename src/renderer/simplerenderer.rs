@@ -1,42 +1,33 @@
-use std::mem;
-use std;
-
-//mod game;
-
 use game::GameState;
-
+use libc;
+use renderer::Renderer;
+use std;
+use std::mem;
 use winapi::shared::minwindef::LPVOID;
-
 use winapi::shared::windef::{
   HDC,
   HWND,
   LPRECT,
   RECT,
 };
-
+use winapi::um::memoryapi::VirtualAlloc;
+use winapi::um::wingdi::{
+  BITMAPINFO,
+  BITMAPINFOHEADER,
+  DIB_RGB_COLORS,
+  RGBQUAD,
+  SRCCOPY,
+  StretchDIBits,
+};
+use winapi::um::winnt::{
+  MEM_COMMIT,
+  PAGE_READWRITE,
+};
 use winapi::um::winuser::{
   GetClientRect,
   GetDC,
 };
 
-
-use winapi::um::wingdi::{
-  BITMAPINFO,
-  BITMAPINFOHEADER,
-  RGBQUAD,
-  StretchDIBits,
-  DIB_RGB_COLORS,
-  SRCCOPY,
-};
-
-use winapi::um::winnt::{
-  MEM_COMMIT,
-  PAGE_READWRITE,
-};
-
-use winapi::um::memoryapi::VirtualAlloc;
-
-use libc;
 
 struct OffscreenBuffer {
   info: BITMAPINFO,
@@ -45,11 +36,6 @@ struct OffscreenBuffer {
   height: i32,
   pitch: i32,
 
-}
-
-
-pub trait Renderer {
-  fn render_frame(&self, game_state: &mut GameState);
 }
 
 pub struct SimpleRenderer {
@@ -108,7 +94,6 @@ pub fn create_simple_renderer(handle: HWND, back_buffer_width: i32, back_buffer_
     }
   }
 }
-
 
 impl SimpleRenderer {
   fn draw_rectangle(&self, min_x: f32, min_y: f32, max_x: f32, max_y: f32) {
