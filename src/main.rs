@@ -259,7 +259,7 @@ fn main() {
     client_width = (*lp_rect).right;
     client_height = (*lp_rect).bottom;
   }
-  let renderer = Renderer::new(window.dc,  client_width,  client_height, 960,540);
+  let renderer = renderer::create_simple_renderer(window.dc, client_width, client_height, 960, 540);
   loop {
     if main_loop(&mut window, &mut game_state, &renderer) {
       break;

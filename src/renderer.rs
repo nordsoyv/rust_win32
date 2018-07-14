@@ -37,16 +37,19 @@ struct OffscreenBuffer {
 }
 
 
-pub struct Renderer {
+pub trait Renderer {
+  fn render_frame(&self, game_state: &mut GameState);
+}
+
+pub struct SimpleRenderer {
   back_buffer: OffscreenBuffer,
   window_width: i32,
   window_height: i32,
   hdc: HDC,
 }
 
-
-impl Renderer {
-  pub fn new(hdc: HDC, window_width: i32, window_height: i32, back_buffer_width: i32, back_buffer_height: i32) -> Renderer {
+pub fn create_simple_renderer(hdc: HDC, window_width: i32, window_height: i32, back_buffer_width: i32, back_buffer_height: i32) -> SimpleRenderer {
+  {
     let bytes_per_pixel = 4;
     let bitmap_memory_size = back_buffer_width * back_buffer_height * bytes_per_pixel;
     unsafe {
@@ -79,7 +82,7 @@ impl Renderer {
         memory: VirtualAlloc(std::ptr::null_mut(), bitmap_memory_size as usize, MEM_COMMIT, PAGE_READWRITE),
       };
 
-      return Renderer {
+      return SimpleRenderer {
         back_buffer: buffer,
         window_width,
         window_height,
@@ -87,21 +90,10 @@ impl Renderer {
       };
     }
   }
+}
 
-  pub fn render_frame(&self, game_state: &mut GameState) {
-    self.render_gradient(game_state.player.pos_x as i32, game_state.player.pos_y as i32);
-    self.draw_rectangle(game_state.player.pos_x,
-                        game_state.player.pos_y,
-                        game_state.player.pos_x + 40.0,
-                        game_state.player.pos_y + 40.0);
-    unsafe {
-      StretchDIBits(self.hdc,
-                    0, 0, self.window_width, self.window_height,
-                    0, 0, self.back_buffer.width, self.back_buffer.height,
-                    self.back_buffer.memory, &self.back_buffer.info, DIB_RGB_COLORS, SRCCOPY);
-    }
-  }
 
+impl SimpleRenderer {
   fn draw_rectangle(&self, min_x: f32, min_y: f32, max_x: f32, max_y: f32) {
     let mut start_x = min_x as i32;
     if start_x < 0 {
@@ -152,3 +144,18 @@ impl Renderer {
   }
 }
 
+impl Renderer for SimpleRenderer {
+  fn render_frame(&self, game_state: &mut GameState) {
+    self.render_gradient(game_state.player.pos_x as i32, game_state.player.pos_y as i32);
+    self.draw_rectangle(game_state.player.pos_x,
+                        game_state.player.pos_y,
+                        game_state.player.pos_x + 40.0,
+                        game_state.player.pos_y + 40.0);
+    unsafe {
+      StretchDIBits(self.hdc,
+                    0, 0, self.window_width, self.window_height,
+                    0, 0, self.back_buffer.width, self.back_buffer.height,
+                    self.back_buffer.memory, &self.back_buffer.info, DIB_RGB_COLORS, SRCCOPY);
+    }
+  }
+}
