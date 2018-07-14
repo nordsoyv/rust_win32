@@ -1,12 +1,12 @@
 use std::time::Instant;
 use std::time::Duration;
 
-
 pub struct GameState {
   pub frame: u32,
   pub input: GameInput,
   pub time: GameTime,
   pub player: Player,
+  pub entities: Vec<Entity>,
 }
 
 pub struct GameInput {
@@ -19,11 +19,42 @@ pub struct GameInput {
 
 impl GameState {
   pub fn new() -> GameState {
+    let mut entities = Vec::new();
+    entities.push(Entity{
+      pos_x: 2.0,
+      pos_y: 540.0 / 2.0,
+      width: 4.0,
+      height: 540.0,
+    });
+
+    entities.push(Entity{
+      pos_x: 960.0 - 2.0,
+      pos_y: 540.0 / 2.0,
+      width: 4.0,
+      height: 540.0,
+    });
+
+
+    entities.push(Entity{
+      pos_x: 960.0 / 2.0,
+      pos_y:  2.0,
+      width: 960.0,
+      height: 4.0,
+    });
+    entities.push(Entity{
+      pos_x: 960.0 / 2.0,
+      pos_y:  540.0 - 2.0,
+      width: 960.0,
+      height: 4.0,
+    });
+
+
     GameState {
       input: GameInput::new(),
       frame: 0,
       time: GameTime::new(),
       player: Player::new(),
+      entities: entities,
     }
   }
 }
@@ -72,6 +103,14 @@ impl Player {
     }
   }
 }
+
+pub struct Entity {
+  pub pos_x: f32,
+  pub pos_y :f32,
+  pub width: f32,
+  pub height: f32,
+}
+
 
 pub fn game_loop(game_state: &mut GameState) -> bool {
   if game_state.input.quit_key {

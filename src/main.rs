@@ -1,72 +1,62 @@
 // Let's put this so that it won't open console
 //#![windows_subsystem = "windows"]
 
+extern crate libc;
 #[cfg(windows)]
 extern crate winapi;
-extern crate libc;
 // https://docs.rs/winapi/*/x86_64-pc-windows-msvc/winapi/um/libloaderapi/index.html?search=winuser
+
+use game::game_loop;
+use game::GameState;
+use renderer::Renderer;
+use self::winapi::shared::minwindef::{
+  LPARAM,
+  LRESULT,
+  UINT,
+  WPARAM,
+};
+use self::winapi::shared::windef::HWND;
+use self::winapi::um::libloaderapi::GetModuleHandleW;
+use self::winapi::um::wincon::GetConsoleWindow;
+use self::winapi::um::winuser::{
+  CreateWindowExW,
+  DefWindowProcW,
+  DispatchMessageW,
+  GetAsyncKeyState,
+  PeekMessageW,
+  PostQuitMessage,
+  RegisterClassW,
+  ShowWindow,
+  TranslateMessage,
+};
+use self::winapi::um::winuser::{
+  CS_HREDRAW,
+  CS_OWNDC,
+  CS_VREDRAW,
+  CW_USEDEFAULT,
+  MSG,
+  PM_REMOVE,
+  SW_HIDE,
+  VK_ESCAPE,
+//    WM_PAINT,
+  WM_CREATE,
+  WM_DESTROY,
+  WNDCLASSW,
+  WS_OVERLAPPEDWINDOW,
+  WS_VISIBLE,
+};
+use std::ffi::OsStr;
+use std::io::Error;
+use std::iter::once;
+use std::mem;
+use std::os::windows::ffi::OsStrExt;
+use std::ptr::null_mut;
+use std::time::Duration;
+use std::time::Instant;
 
 mod game;
 mod renderer;
 
-use game::GameState;
-use game::game_loop;
-
-
-use std::ffi::OsStr;
-use std::os::windows::ffi::OsStrExt;
-use std::iter::once;
-use std::mem;
-use std::ptr::null_mut;
-use std::io::Error;
-
-use self::winapi::shared::windef::{
-  HWND,
-};
-use self::winapi::shared::minwindef::{
-  LPARAM,
-  WPARAM,
-  UINT,
-  LRESULT,
-};
-
-use self::winapi::um::libloaderapi::GetModuleHandleW;
-use self::winapi::um::winuser::{
-  DefWindowProcW,
-  RegisterClassW,
-  CreateWindowExW,
-  TranslateMessage,
-  DispatchMessageW,
-  PeekMessageW,
-  PostQuitMessage,
-  ShowWindow,
-  GetAsyncKeyState,
-};
-use self::winapi::um::winuser::{
-  MSG,
-  WNDCLASSW,
-  CS_OWNDC,
-  CS_HREDRAW,
-  CS_VREDRAW,
-  CW_USEDEFAULT,
-  WS_OVERLAPPEDWINDOW,
-  WS_VISIBLE,
-//    WM_PAINT,
-  WM_DESTROY,
-  WM_CREATE,
-  PM_REMOVE,
-  SW_HIDE,
-  VK_ESCAPE,
-};
-
-
-use self::winapi::um::wincon::GetConsoleWindow;
-
-use std::time::Duration;
-use std::time::Instant;
-use renderer::Renderer;
-
-// ----------------------------------------------------
 
 // We have to encode text to wide format for Windows
 #[cfg(windows)]
@@ -164,7 +154,7 @@ fn create_window(name: &str, title: &str) -> Result<Window, Error> {
     if handle.is_null() {
       Err(Error::last_os_error())
     } else {
-      Ok(Window { handle})
+      Ok(Window { handle })
     }
   }
 }

@@ -153,6 +153,13 @@ impl Renderer for SimpleRenderer {
                         game_state.player.pos_y,
                         game_state.player.pos_x + 40.0,
                         game_state.player.pos_y + 40.0);
+    for e in &game_state.entities {
+      let min_x = e.pos_x - (e.width/2.0);
+      let max_x = e.pos_x + (e.width/2.0);
+      let min_y = e.pos_y - (e.height/2.0);
+      let max_y = e.pos_y + (e.height/2.0);
+      self.draw_rectangle(min_x,min_y,max_x,max_y);
+    }
     unsafe {
       StretchDIBits(self.hdc,
                     0, 0, self.window_width, self.window_height,
