@@ -7,7 +7,17 @@ use game::GameState;
 
 use winapi::shared::minwindef::LPVOID;
 
-use winapi::shared::windef::HDC;
+use winapi::shared::windef::{
+  HDC,
+  HWND,
+  LPRECT,
+  RECT,
+};
+
+use winapi::um::winuser::{
+  GetClientRect,
+  GetDC,
+};
 
 
 use winapi::um::wingdi::{
@@ -26,6 +36,7 @@ use winapi::um::winnt::{
 
 use winapi::um::memoryapi::VirtualAlloc;
 
+use libc;
 
 struct OffscreenBuffer {
   info: BITMAPINFO,
@@ -48,11 +59,17 @@ pub struct SimpleRenderer {
   hdc: HDC,
 }
 
-pub fn create_simple_renderer(hdc: HDC, window_width: i32, window_height: i32, back_buffer_width: i32, back_buffer_height: i32) -> SimpleRenderer {
+pub fn create_simple_renderer(handle: HWND, back_buffer_width: i32, back_buffer_height: i32) -> SimpleRenderer {
   {
-    let bytes_per_pixel = 4;
-    let bitmap_memory_size = back_buffer_width * back_buffer_height * bytes_per_pixel;
     unsafe {
+      let dc = GetDC(handle);
+      let lp_rect: LPRECT = libc::malloc(mem::size_of::<RECT>() as libc::size_t) as *mut RECT;
+      GetClientRect(handle, lp_rect);
+      let client_width = (*lp_rect).right;
+      let client_height = (*lp_rect).bottom;
+
+      let bytes_per_pixel = 4;
+      let bitmap_memory_size = back_buffer_width * back_buffer_height * bytes_per_pixel;
       let buffer = OffscreenBuffer {
         width: back_buffer_width,
         height: back_buffer_height,
@@ -84,9 +101,9 @@ pub fn create_simple_renderer(hdc: HDC, window_width: i32, window_height: i32, b
 
       return SimpleRenderer {
         back_buffer: buffer,
-        window_width,
-        window_height,
-        hdc,
+        window_width: client_width,
+        window_height: client_height,
+        hdc: dc,
       };
     }
   }

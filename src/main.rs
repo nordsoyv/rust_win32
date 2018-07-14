@@ -22,9 +22,6 @@ use std::io::Error;
 
 use self::winapi::shared::windef::{
   HWND,
-  RECT,
-  LPRECT,
-  HDC,
 };
 use self::winapi::shared::minwindef::{
   LPARAM,
@@ -42,10 +39,8 @@ use self::winapi::um::winuser::{
   DispatchMessageW,
   PeekMessageW,
   PostQuitMessage,
-  GetClientRect,
   ShowWindow,
   GetAsyncKeyState,
-  GetDC,
 };
 use self::winapi::um::winuser::{
   MSG,
@@ -84,7 +79,6 @@ fn win32_string(value: &str) -> *const u16 {
 #[cfg(windows)]
 struct Window {
   handle: HWND,
-  dc: HDC,
 }
 
 
@@ -170,10 +164,7 @@ fn create_window(name: &str, title: &str) -> Result<Window, Error> {
     if handle.is_null() {
       Err(Error::last_os_error())
     } else {
-      let dc = GetDC(handle);
-      let lp_rect: LPRECT = libc::malloc(mem::size_of::<RECT>() as libc::size_t) as *mut RECT;
-      GetClientRect(handle, lp_rect);
-      Ok(Window { handle, dc })
+      Ok(Window { handle})
     }
   }
 }
@@ -250,16 +241,7 @@ fn main() {
 
   let mut window = create_window("my_window", "Portfolio manager pro").unwrap();
   let mut game_state = GameState::new();
-  let  client_width :i32 ;
-  let  client_height : i32 ;
-
-  unsafe {
-    let lp_rect: LPRECT = libc::malloc(mem::size_of::<RECT>() as libc::size_t) as *mut RECT;
-    GetClientRect(window.handle, lp_rect);
-    client_width = (*lp_rect).right;
-    client_height = (*lp_rect).bottom;
-  }
-  let renderer = renderer::create_simple_renderer(window.dc, client_width, client_height, 960, 540);
+  let renderer = renderer::create_simple_renderer(window.handle, 960, 540);
   loop {
     if main_loop(&mut window, &mut game_state, &renderer) {
       break;
