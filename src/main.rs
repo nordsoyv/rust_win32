@@ -215,9 +215,10 @@ fn main_loop(window: &mut Window, game_state: &mut GameState, renderer: &Rendere
 
   renderer.render_frame(game_state);
   let frame_time = game_state.time.frame_start_time.elapsed();
+
   if frame_time < Duration::from_millis(15) {
     let sleep_time = Duration::from_millis((15 - frame_time.subsec_millis()).into());
-    //println!("Sleeping for {:?}", sleep_time);
+    println!("Sleeping for {:?}", sleep_time);
     std::thread::sleep(sleep_time);
   }
 

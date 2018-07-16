@@ -1,3 +1,4 @@
+use game::Color;
 use game::GameState;
 use libc;
 use renderer::Renderer;
@@ -96,7 +97,7 @@ pub fn create_simple_renderer(handle: HWND, back_buffer_width: i32, back_buffer_
 }
 
 impl SimpleRenderer {
-  fn draw_rectangle(&self, min_x: f32, min_y: f32, max_x: f32, max_y: f32) {
+  fn draw_rectangle(&self, min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: &Color) {
     let mut start_x = min_x as i32;
     if start_x < 0 {
       start_x = 0;
@@ -113,6 +114,19 @@ impl SimpleRenderer {
     if end_y > self.back_buffer.height {
       end_y = self.back_buffer.height;
     }
+
+    let mut c: u32 = 0;
+    let alpha: u32 = ((color.a * 255.0) as u8) as u32;
+    let red: u32 = ((color.r * 255.0) as u8) as u32;
+    let green: u32 = ((color.g * 255.0) as u8) as u32;
+    let blue: u32 = ((color.b * 255.0) as u8) as u32;
+
+    c = c | alpha << 24;
+    c = c | red << 16;
+    c = c | green << 8;
+    c = c | blue << 0;
+
+
     unsafe {
       let start_of_memory = self.back_buffer.memory as *mut u32;
       for y in start_y..end_y {
@@ -120,7 +134,7 @@ impl SimpleRenderer {
         offset += start_x as isize;
         for _x in start_x..end_x {
           let mut pixel = start_of_memory.offset(offset);
-          *pixel = 0xffffffff;
+          *pixel = c;
 
 
           offset += 1;
@@ -144,21 +158,35 @@ impl SimpleRenderer {
       }
     }
   }
+
+  fn clear_screen(&self) {
+    unsafe {
+      let start_of_memory = self.back_buffer.memory as *mut u32;
+      let mut offset = 0;
+      for _pos in 0..(self.back_buffer.height * self.back_buffer.width) {
+        offset += 1;
+        let mut pixel = start_of_memory.offset(offset);
+        *pixel = 0x0;
+      }
+    }
+  }
 }
 
 impl Renderer for SimpleRenderer {
   fn render_frame(&self, game_state: &mut GameState) {
-    self.render_gradient(game_state.player.pos_x as i32, game_state.player.pos_y as i32);
+    // self.render_gradient(game_state.player.pos_x as i32, game_state.player.pos_y as i32);
+    self.clear_screen();
     self.draw_rectangle(game_state.player.pos_x,
                         game_state.player.pos_y,
                         game_state.player.pos_x + 40.0,
-                        game_state.player.pos_y + 40.0);
+                        game_state.player.pos_y + 40.0,
+                        &game_state.player.color);
     for e in &game_state.entities {
-      let min_x = e.pos_x - (e.width/2.0);
-      let max_x = e.pos_x + (e.width/2.0);
-      let min_y = e.pos_y - (e.height/2.0);
-      let max_y = e.pos_y + (e.height/2.0);
-      self.draw_rectangle(min_x,min_y,max_x,max_y);
+      let min_x = e.pos_x - (e.width / 2.0);
+      let max_x = e.pos_x + (e.width / 2.0);
+      let min_y = e.pos_y - (e.height / 2.0);
+      let max_y = e.pos_y + (e.height / 2.0);
+      self.draw_rectangle(min_x, min_y, max_x, max_y, &e.color);
     }
     unsafe {
       StretchDIBits(self.hdc,
