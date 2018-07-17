@@ -1,4 +1,3 @@
-use game::Color;
 use game::GameState;
 use libc;
 use renderer::Renderer;
@@ -25,13 +24,15 @@ use winapi::um::wingdi::{
 };
 use winapi::um::winnt::{
   MEM_COMMIT,
-  PAGE_READWRITE,
   MEM_RELEASE,
+  PAGE_READWRITE,
 };
 use winapi::um::winuser::{
   GetClientRect,
   GetDC,
 };
+use entities::FEATURE_DRAWABLE;
+use entities::Color;
 
 
 struct OffscreenBuffer {
@@ -139,8 +140,6 @@ impl SimpleRenderer {
         for _x in start_x..end_x {
           let mut pixel = start_of_memory.offset(offset);
           *pixel = c;
-
-
           offset += 1;
         }
       }
@@ -169,26 +168,21 @@ impl SimpleRenderer {
       let bitmap_memory_size = self.back_buffer.width * self.back_buffer.height * 4;
       self.back_buffer.memory = VirtualAlloc(std::ptr::null_mut(), bitmap_memory_size as usize, MEM_COMMIT, PAGE_READWRITE)
     }
-
-    //memory: VirtualAlloc(std::ptr::null_mut(), bitmap_memory_size as usize, MEM_COMMIT, PAGE_READWRITE),
   }
 }
 
 impl Renderer for SimpleRenderer {
   fn render_frame(&mut self, game_state: &mut GameState) {
-    // self.render_gradient(game_state.player.pos_x as i32, game_state.player.pos_y as i32);
     self.clear_screen();
-    self.draw_rectangle(game_state.player.pos_x,
-                        game_state.player.pos_y,
-                        game_state.player.pos_x + 40.0,
-                        game_state.player.pos_y + 40.0,
-                        &game_state.player.color);
     for e in &game_state.entities {
-      let min_x = e.pos_x - (e.width / 2.0);
-      let max_x = e.pos_x + (e.width / 2.0);
-      let min_y = e.pos_y - (e.height / 2.0);
-      let max_y = e.pos_y + (e.height / 2.0);
-      self.draw_rectangle(min_x, min_y, max_x, max_y, &e.color);
+      if e.features & FEATURE_DRAWABLE > 0 {
+        let min_x = e.pos_x - (e.width / 2.0);
+        let max_x = e.pos_x + (e.width / 2.0);
+        let min_y = e.pos_y - (e.height / 2.0);
+        let max_y = e.pos_y + (e.height / 2.0);
+        self.draw_rectangle(min_x, min_y, max_x, max_y, &e.color);
+      }
+
     }
     unsafe {
       StretchDIBits(self.hdc,
