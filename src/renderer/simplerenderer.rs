@@ -11,7 +11,10 @@ use winapi::shared::windef::{
   LPRECT,
   RECT,
 };
-use winapi::um::memoryapi::VirtualAlloc;
+use winapi::um::memoryapi::{
+  VirtualAlloc,
+  VirtualFree,
+};
 use winapi::um::wingdi::{
   BITMAPINFO,
   BITMAPINFOHEADER,
@@ -23,6 +26,7 @@ use winapi::um::wingdi::{
 use winapi::um::winnt::{
   MEM_COMMIT,
   PAGE_READWRITE,
+  MEM_RELEASE,
 };
 use winapi::um::winuser::{
   GetClientRect,
@@ -159,21 +163,19 @@ impl SimpleRenderer {
     }
   }
 
-  fn clear_screen(&self) {
+  fn clear_screen(&mut self) {
     unsafe {
-      let start_of_memory = self.back_buffer.memory as *mut u32;
-      let mut offset = 0;
-      for _pos in 0..(self.back_buffer.height * self.back_buffer.width) {
-        offset += 1;
-        let mut pixel = start_of_memory.offset(offset);
-        *pixel = 0x0;
-      }
+      VirtualFree(self.back_buffer.memory, 0, MEM_RELEASE);
+      let bitmap_memory_size = self.back_buffer.width * self.back_buffer.height * 4;
+      self.back_buffer.memory = VirtualAlloc(std::ptr::null_mut(), bitmap_memory_size as usize, MEM_COMMIT, PAGE_READWRITE)
     }
+
+    //memory: VirtualAlloc(std::ptr::null_mut(), bitmap_memory_size as usize, MEM_COMMIT, PAGE_READWRITE),
   }
 }
 
 impl Renderer for SimpleRenderer {
-  fn render_frame(&self, game_state: &mut GameState) {
+  fn render_frame(&mut self, game_state: &mut GameState) {
     // self.render_gradient(game_state.player.pos_x as i32, game_state.player.pos_y as i32);
     self.clear_screen();
     self.draw_rectangle(game_state.player.pos_x,

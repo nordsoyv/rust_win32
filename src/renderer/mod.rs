@@ -9,7 +9,7 @@ use winapi::shared::windef::{
 
 
 pub trait Renderer {
-  fn render_frame(&self, game_state: &mut GameState);
+  fn render_frame(&mut self, game_state: &mut GameState);
 }
 
 pub fn create_simple_renderer(handle: HWND, back_buffer_width: i32, back_buffer_height: i32) -> SimpleRenderer {

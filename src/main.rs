@@ -196,7 +196,21 @@ fn get_input(game_state: &mut GameState) {
 }
 
 
-fn main_loop(window: &mut Window, game_state: &mut GameState, renderer: &Renderer) -> bool {
+#[cfg(windows)]
+fn main() {
+  hide_console_window();
+
+  let mut window = create_window("my_window", "Portfolio manager pro").unwrap();
+  let mut game_state = GameState::new();
+  let mut renderer = renderer::create_simple_renderer(window.handle, 960, 540);
+  loop {
+    if main_loop(&mut window, &mut game_state, &mut renderer) {
+      break;
+    }
+  }
+}
+
+fn main_loop(window: &mut Window, game_state: &mut GameState, renderer: &mut Renderer) -> bool {
   if handle_messages(window) {
     return true;
   }
@@ -215,27 +229,15 @@ fn main_loop(window: &mut Window, game_state: &mut GameState, renderer: &Rendere
 
   renderer.render_frame(game_state);
   let frame_time = game_state.time.frame_start_time.elapsed();
+  //println!("Frame time {:?}", frame_time.subsec_millis());
 
   if frame_time < Duration::from_millis(15) {
     let sleep_time = Duration::from_millis((15 - frame_time.subsec_millis()).into());
-    println!("Sleeping for {:?}", sleep_time);
+
     std::thread::sleep(sleep_time);
+  }else {
+    println!("Missed frame timing. Last frame took {:?} milliseconds", frame_time.subsec_millis())
   }
 
   return false;
-}
-
-
-#[cfg(windows)]
-fn main() {
-  hide_console_window();
-
-  let mut window = create_window("my_window", "Portfolio manager pro").unwrap();
-  let mut game_state = GameState::new();
-  let renderer = renderer::create_simple_renderer(window.handle, 960, 540);
-  loop {
-    if main_loop(&mut window, &mut game_state, &renderer) {
-      break;
-    }
-  }
 }
