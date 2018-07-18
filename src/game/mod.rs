@@ -1,7 +1,7 @@
 use entities::Color;
 use entities::Entity;
-use entities::Force;
 use entities::FEATURE_PLAYER;
+use entities::Force;
 use std::time::Duration;
 use std::time::Instant;
 
@@ -133,22 +133,9 @@ pub fn game_loop(game_state: &mut GameState) -> bool {
         return false;
     }
 
-    let step_size: f32 = 5.0;
-
     for mut e in &mut game_state.entities {
-        if e.features & FEATURE_PLAYER > 0 {
-            if game_state.input.up_key {
-                e.pos_y += step_size;
-            }
-            if game_state.input.down_key {
-                e.pos_y -= step_size;
-            }
-            if game_state.input.left_key {
-                e.pos_x -= step_size;
-            }
-            if game_state.input.right_key {
-                e.pos_x += step_size;
-            }
+        if e.features & FEATURE_PLAYER != 0 {
+            move_player(&game_state.input, e);
         }
     }
 
@@ -157,4 +144,59 @@ pub fn game_loop(game_state: &mut GameState) -> bool {
     //println!("Total time taken {:?}", game_state.game_start_time.elapsed());
 
     return true;
+}
+
+struct Intersection {
+    x_overlap: i32,
+    y_overlap: i32,
+}
+
+fn check_intersections(player: &mut Entity, entities: &mut Vec<Entity>) -> Option<Intersection> {
+    for mut other_e in &mut entities.iter() {
+        let intersection = check_intersection(player, other_e);
+        match intersection {
+            Some(inter) => return Some(inter),
+            None => {}
+        }
+    }
+    None
+}
+
+fn check_intersection(player: &mut Entity, other: &Entity) -> Option<Intersection> {
+    let top = player.pos_y + player.height;
+    let right = player.pos_x + player.width;
+    let bottom = player.pos_y - player.height ;
+    let left = player.pos_x + player.width;
+
+    let other_top = other.pos_y + other.height ;
+    let other_right =  other.pos_x + other.width;
+    let other_bottom = other.pos_y - other.height;
+    let other_left =  other.pos_x - other.width;
+
+    let mut top_inside = false;
+    let mut bottom_inside = false;
+    let mut left_inside = false;
+    let mut right_inside = false;
+
+    if top < other_top && top > other_bottom {
+        top_inside = true;
+    }
+
+    None
+}
+
+fn move_player(input: &GameInput, e: &mut Entity) -> () {
+    let step_size: f32 = 5.0;
+    if input.up_key {
+        e.pos_y += step_size;
+    }
+    if input.down_key {
+        e.pos_y -= step_size;
+    }
+    if input.left_key {
+        e.pos_x -= step_size;
+    }
+    if input.right_key {
+        e.pos_x += step_size;
+    }
 }
