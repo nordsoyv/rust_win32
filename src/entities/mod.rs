@@ -25,6 +25,7 @@ pub struct Entity {
 
 pub static FEATURE_PLAYER: u64 = 1 << 0;
 pub static FEATURE_DRAWABLE: u64 = 1 << 1;
+pub static FEATURE_COLLIDABLE : u64 = 1 << 2;
 
 static mut CURR_ID: u32 = 0;
 
@@ -32,6 +33,7 @@ fn next_id() -> u32 {
     unsafe {
         let next = CURR_ID;
         CURR_ID += 1;
+      println!("Creating id {}", next);
         next
     }
 }
@@ -48,7 +50,7 @@ impl Entity {
         Entity {
             id: next_id(),
             force,
-            features: FEATURE_DRAWABLE,
+            features: FEATURE_DRAWABLE | FEATURE_COLLIDABLE,
             pos_x: x,
             pos_y: y,
             width,
