@@ -23,6 +23,7 @@ use self::winapi::um::winuser::{
     PM_REMOVE,
     SW_HIDE,
     VK_ESCAPE,
+    VK_SPACE,
     //    WM_PAINT,
     WM_CREATE,
     WM_DESTROY,
@@ -181,6 +182,7 @@ fn get_input(game_state: &mut GameState) {
         game_state.input.right_key = GetAsyncKeyState(0x44) != 0;
         game_state.input.down_key = GetAsyncKeyState(0x53) != 0;
         game_state.input.up_key = GetAsyncKeyState(0x57) != 0;
+        game_state.input.space = GetAsyncKeyState(VK_SPACE) != 0;
     }
 }
 
