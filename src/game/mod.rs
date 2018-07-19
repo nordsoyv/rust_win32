@@ -136,18 +136,27 @@ pub fn game_loop(game_state: &mut GameState) -> bool {
     }
 
     for mut e in &mut game_state.entities {
-        if e.features & FEATURE_PLAYER != 0 {
+        if e.has_feature(FEATURE_PLAYER) {
             move_player(&game_state.input, e);
         }
     }
 
     for e in &game_state.entities {
-        if e.features & FEATURE_PLAYER != 0 {
+        if e.has_feature(FEATURE_PLAYER) {
             let i = check_intersections(&e, &game_state.entities);
             match i {
-                Some(inter) => {} //println!("Got intersections : {}", inter.len()),
-                None => {}
+        Some(inter) => {
+          for i in inter {
+            match i.hit_side {
+              Side::Left => {        }
+              Side::Right => {              }
+              Side::Top => {              }
+              Side::Bottom => {              }
             }
+          }
+        } //println!("Got intersections : {}", inter.len()),
+        None => {}
+      }
         }
     }
 
@@ -157,20 +166,31 @@ pub fn game_loop(game_state: &mut GameState) -> bool {
 
     return true;
 }
+#[derive(Debug)]
+enum Side {
+    Left,
+    Right,
+    Top,
+    Bottom,
+}
 
+#[derive(Debug)]
 struct Intersection {
     hit_id: u32,
-    x_overlap: i32,
-    y_overlap: i32,
+    hit_side: Side,
+    amount: f32,
 }
 
 fn check_intersections(player: &Entity, entities: &Vec<Entity>) -> Option<Vec<Intersection>> {
     let mut results = Vec::new();
     for mut other_e in &mut entities.iter() {
-        if other_e.features & FEATURE_COLLIDABLE != 0 {
+        if other_e.has_feature(FEATURE_COLLIDABLE) {
             let intersection = check_intersection(player, other_e);
             match intersection {
-                Some(inter) => results.push(inter),
+                Some(inter) => {
+                    println!("{:?}", inter);
+                    results.push(inter)
+                }
                 None => {}
             }
         }
@@ -202,19 +222,49 @@ fn check_intersection(player: &Entity, other: &Entity) -> Option<Intersection> {
         && top_side_intersection < 0.0
         && bottom_side_intersection < 0.0
     {
-        println!(
-            "{} {} {} {}",
-            left_side_intersection,
-            right_side_intersection,
-            top_side_intersection,
-            bottom_side_intersection
-        );
+        if left_side_intersection >= right_side_intersection
+            && left_side_intersection >= top_side_intersection
+            && left_side_intersection >= bottom_side_intersection
+        {
+            return Some(Intersection {
+                hit_id: other.id,
+                hit_side: Side::Left,
+                amount: left_side_intersection * -1.0,
+            });
+        }
 
-        return Some(Intersection {
-            hit_id: other.id,
-            x_overlap: 0,
-            y_overlap: 0,
-        });
+        if right_side_intersection >= left_side_intersection
+            && right_side_intersection >= top_side_intersection
+            && right_side_intersection >= bottom_side_intersection
+        {
+            return Some(Intersection {
+                hit_id: other.id,
+                hit_side: Side::Right,
+                amount: right_side_intersection * -1.0,
+            });
+        }
+
+        if top_side_intersection >= left_side_intersection
+            && top_side_intersection >= right_side_intersection
+            && top_side_intersection >= bottom_side_intersection
+        {
+            return Some(Intersection {
+                hit_id: other.id,
+                hit_side: Side::Top,
+                amount: top_side_intersection * -1.0,
+            });
+        }
+
+        if bottom_side_intersection >= left_side_intersection
+            && bottom_side_intersection >= top_side_intersection
+            && bottom_side_intersection >= right_side_intersection
+        {
+            return Some(Intersection {
+                hit_id: other.id,
+                hit_side: Side::Bottom,
+                amount: bottom_side_intersection * -1.0,
+            });
+        }
     }
     None
 }
