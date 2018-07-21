@@ -9,7 +9,8 @@ pub struct GameState {
     pub frame: u32,
     pub input: GameInput,
     pub time: GameTime,
-    pub entities: Vec<Entity>,
+    pub players: Vec<Entity>,
+    pub walls: Vec<Entity>,
 }
 
 pub struct GameInput {
@@ -52,8 +53,9 @@ impl GameTime {
 
 impl GameState {
     pub fn new() -> GameState {
-        let mut entities = Vec::new();
-        entities.push(Entity::create_player(
+        let mut players = Vec::new();
+        let mut walls = Vec::new();
+        players.push(Entity::create_player(
             10.0,
             10.0,
             20.0,
@@ -66,7 +68,7 @@ impl GameState {
             },
         ));
 
-        entities.push(Entity::create_static(
+        walls.push(Entity::create_static(
             2.0,
             540.0 / 2.0,
             4.0,
@@ -80,7 +82,7 @@ impl GameState {
             Force::Neutral,
         ));
 
-        entities.push(Entity::create_static(
+        walls.push(Entity::create_static(
             960.0 - 2.0,
             540.0 / 2.0,
             4.0,
@@ -94,7 +96,7 @@ impl GameState {
             Force::Neutral,
         ));
 
-        entities.push(Entity::create_static(
+        walls.push(Entity::create_static(
             960.0 / 2.0,
             2.0,
             960.0,
@@ -107,7 +109,7 @@ impl GameState {
             },
             Force::Neutral,
         ));
-        entities.push(Entity::create_static(
+        walls.push(Entity::create_static(
             960.0 / 2.0,
             540.0 - 2.0,
             960.0,
@@ -125,7 +127,8 @@ impl GameState {
             input: GameInput::new(),
             frame: 0,
             time: GameTime::new(),
-            entities,
+            players,
+            walls,
         }
     }
 }
@@ -135,29 +138,38 @@ pub fn game_loop(game_state: &mut GameState) -> bool {
         return false;
     }
 
-    for mut e in &mut game_state.entities {
-        if e.has_feature(FEATURE_PLAYER) {
-            move_player(&game_state.input, e);
-        }
+    for mut e in &mut game_state.players {
+        move_player(&game_state.input, e);
     }
 
-    for e in &game_state.entities {
-        if e.has_feature(FEATURE_PLAYER) {
-            let i = check_intersections(&e, &game_state.entities);
-            match i {
+    let mut intersections = None;
+
+    for e in &game_state.players {
+        intersections = check_intersections(&e, &game_state.walls);
+    }
+
+    let mut player = &mut game_state.players[0];
+
+    match intersections {
         Some(inter) => {
-          for i in inter {
-            match i.hit_side {
-              Side::Left => {        }
-              Side::Right => {              }
-              Side::Top => {              }
-              Side::Bottom => {              }
+            for i in inter {
+                match i.hit_side {
+                    Side::Left => {
+                        player.pos_x += i.amount;
+                    }
+                    Side::Right => {
+                        player.pos_x -= i.amount;
+                    }
+                    Side::Top => {
+                        player.pos_y -= i.amount;
+                    }
+                    Side::Bottom => {
+                        player.pos_y += i.amount;
+                    }
+                }
             }
-          }
         } //println!("Got intersections : {}", inter.len()),
         None => {}
-      }
-        }
     }
 
     //println!("Frame {} ", game_state.frame);
@@ -166,6 +178,7 @@ pub fn game_loop(game_state: &mut GameState) -> bool {
 
     return true;
 }
+
 #[derive(Debug)]
 enum Side {
     Left,
@@ -176,23 +189,22 @@ enum Side {
 
 #[derive(Debug)]
 struct Intersection {
-    hit_id: u32,
+    entity1: u32,
+    entity2: u32,
     hit_side: Side,
     amount: f32,
 }
 
-fn check_intersections(player: &Entity, entities: &Vec<Entity>) -> Option<Vec<Intersection>> {
+fn check_intersections(player: &Entity, walls: &Vec<Entity>) -> Option<Vec<Intersection>> {
     let mut results = Vec::new();
-    for mut other_e in &mut entities.iter() {
-        if other_e.has_feature(FEATURE_COLLIDABLE) {
-            let intersection = check_intersection(player, other_e);
-            match intersection {
-                Some(inter) => {
-                    println!("{:?}", inter);
-                    results.push(inter)
-                }
-                None => {}
+    for mut other_e in &mut walls.iter() {
+        let intersection = check_intersection(player, other_e);
+        match intersection {
+            Some(inter) => {
+                //println!("{:?}", inter);
+                results.push(inter)
             }
+            None => {}
         }
     }
     if results.len() > 0 {
@@ -227,7 +239,8 @@ fn check_intersection(player: &Entity, other: &Entity) -> Option<Intersection> {
             && left_side_intersection >= bottom_side_intersection
         {
             return Some(Intersection {
-                hit_id: other.id,
+                entity1: player.id,
+                entity2: other.id,
                 hit_side: Side::Left,
                 amount: left_side_intersection * -1.0,
             });
@@ -238,7 +251,8 @@ fn check_intersection(player: &Entity, other: &Entity) -> Option<Intersection> {
             && right_side_intersection >= bottom_side_intersection
         {
             return Some(Intersection {
-                hit_id: other.id,
+                entity1: player.id,
+                entity2: other.id,
                 hit_side: Side::Right,
                 amount: right_side_intersection * -1.0,
             });
@@ -249,7 +263,8 @@ fn check_intersection(player: &Entity, other: &Entity) -> Option<Intersection> {
             && top_side_intersection >= bottom_side_intersection
         {
             return Some(Intersection {
-                hit_id: other.id,
+                entity1: player.id,
+                entity2: other.id,
                 hit_side: Side::Top,
                 amount: top_side_intersection * -1.0,
             });
@@ -260,7 +275,8 @@ fn check_intersection(player: &Entity, other: &Entity) -> Option<Intersection> {
             && bottom_side_intersection >= right_side_intersection
         {
             return Some(Intersection {
-                hit_id: other.id,
+                entity1: player.id,
+                entity2: other.id,
                 hit_side: Side::Bottom,
                 amount: bottom_side_intersection * -1.0,
             });

@@ -165,14 +165,19 @@ impl SimpleRenderer {
 impl Renderer for SimpleRenderer {
     fn render_frame(&mut self, game_state: &mut GameState) {
         self.clear_screen();
-        for e in &game_state.entities {
-            if e.features & FEATURE_DRAWABLE > 0 {
-                let min_x = e.pos_x - (e.width / 2.0);
-                let max_x = e.pos_x + (e.width / 2.0);
-                let min_y = e.pos_y - (e.height / 2.0);
-                let max_y = e.pos_y + (e.height / 2.0);
-                self.draw_rectangle(min_x, min_y, max_x, max_y, &e.color);
-            }
+        for e in &game_state.players {
+            let min_x = e.pos_x - (e.width / 2.0);
+            let max_x = e.pos_x + (e.width / 2.0);
+            let min_y = e.pos_y - (e.height / 2.0);
+            let max_y = e.pos_y + (e.height / 2.0);
+            self.draw_rectangle(min_x, min_y, max_x, max_y, &e.color);
+        }
+        for e in &game_state.walls {
+            let min_x = e.pos_x - (e.width / 2.0);
+            let max_x = e.pos_x + (e.width / 2.0);
+            let min_y = e.pos_y - (e.height / 2.0);
+            let max_y = e.pos_y + (e.height / 2.0);
+            self.draw_rectangle(min_x, min_y, max_x, max_y, &e.color);
         }
         unsafe {
             StretchDIBits(
