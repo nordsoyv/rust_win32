@@ -23,6 +23,19 @@ pub struct Entity {
     pub force: Force,
 }
 
+pub struct Bullet {
+    pub id: u32,
+    pub features: u64,
+    pub pos_x: f32,
+    pub pos_y: f32,
+    pub width: f32,
+    pub height: f32,
+    pub vel_x: f32,
+    pub vel_y: f32,
+    pub color: Color,
+    pub force: Force,
+}
+
 pub static FEATURE_PLAYER: u64 = 1 << 0;
 pub static FEATURE_DRAWABLE: u64 = 1 << 1;
 pub static FEATURE_COLLIDABLE: u64 = 1 << 2;
@@ -73,6 +86,29 @@ impl Entity {
             features: FEATURE_DRAWABLE | FEATURE_PLAYER,
             pos_x: x,
             pos_y: y,
+            width,
+            height,
+            color,
+        }
+    }
+
+    pub fn create_bullet(
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+        vel_x: f32,
+        vel_y: f32,
+        color: Color,
+    ) -> Bullet {
+        Bullet {
+            id: next_id(),
+            force: Force::Player,
+            features: FEATURE_DRAWABLE,
+            pos_x: x,
+            pos_y: y,
+            vel_x,
+            vel_y,
             width,
             height,
             color,

@@ -1,3 +1,4 @@
+use entities::Bullet;
 use entities::Color;
 use entities::Entity;
 use entities::Force;
@@ -11,6 +12,7 @@ pub struct GameState {
     pub time: GameTime,
     pub players: Vec<Entity>,
     pub walls: Vec<Entity>,
+    pub bullets: Vec<Bullet>,
 }
 
 pub struct GameInput {
@@ -18,6 +20,10 @@ pub struct GameInput {
     pub down_key: bool,
     pub left_key: bool,
     pub right_key: bool,
+    pub shoot_right: bool,
+    pub shoot_left: bool,
+    pub shoot_up: bool,
+    pub shoot_down: bool,
     pub quit_key: bool,
     pub space: bool,
 }
@@ -27,9 +33,13 @@ impl GameInput {
         GameInput {
             down_key: false,
             left_key: false,
-            quit_key: false,
             right_key: false,
             up_key: false,
+            shoot_right: false,
+            shoot_left: false,
+            shoot_up: false,
+            shoot_down: false,
+            quit_key: false,
             space: false,
         }
     }
@@ -129,26 +139,41 @@ impl GameState {
             time: GameTime::new(),
             players,
             walls,
+            bullets: Vec::new(),
         }
     }
 }
 
-pub fn game_loop(game_state: &mut GameState) -> bool {
+pub fn game_loop(mut game_state: &mut GameState) -> bool {
+    move_bullets(&mut game_state);
+
+    let mut player = &mut game_state.players[0];
+
     if game_state.input.quit_key {
         return false;
     }
 
-    for mut e in &mut game_state.players {
-        move_player(&game_state.input, e);
+    move_player(&game_state.input, player);
+    if game_state.input.shoot_right {
+        game_state.bullets.push(Entity::create_bullet(
+            player.pos_x,
+            player.pos_y,
+            2.0,
+            2.0,
+            100.0,
+            0.0,
+            Color {
+                r: 1.0,
+                g: 0.1,
+                b: 0.1,
+                a: 1.0,
+            },
+        ))
     }
 
     let mut intersections = None;
 
-    for e in &game_state.players {
-        intersections = check_intersections(&e, &game_state.walls);
-    }
-
-    let mut player = &mut game_state.players[0];
+    intersections = check_intersections(player, &game_state.walls);
 
     match intersections {
         Some(inter) => {
@@ -283,6 +308,17 @@ fn check_intersection(player: &Entity, other: &Entity) -> Option<Intersection> {
         }
     }
     None
+}
+
+fn move_bullets(game_state: &mut GameState) -> () {
+    let mut delta = game_state.time.last_frame_time.subsec_micros() as f32;
+    delta = delta / (1000.0 * 1000.0);
+
+    println!("delta {}", delta);
+
+    for b in &mut game_state.bullets {
+        b.pos_x += b.vel_x * delta;
+    }
 }
 
 fn move_player(input: &GameInput, e: &mut Entity) -> () {

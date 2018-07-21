@@ -183,6 +183,10 @@ fn get_input(game_state: &mut GameState) {
         game_state.input.down_key = GetAsyncKeyState(0x53) != 0;
         game_state.input.up_key = GetAsyncKeyState(0x57) != 0;
         game_state.input.space = GetAsyncKeyState(VK_SPACE) != 0;
+        game_state.input.shoot_down = GetAsyncKeyState(0x4B) != 0;
+        game_state.input.shoot_up = GetAsyncKeyState(0x49) != 0;
+        game_state.input.shoot_left = GetAsyncKeyState(0x4A) != 0;
+        game_state.input.shoot_right = GetAsyncKeyState(0x4C) != 0;
     }
 }
 

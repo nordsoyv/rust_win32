@@ -179,6 +179,14 @@ impl Renderer for SimpleRenderer {
             let max_y = e.pos_y + (e.height / 2.0);
             self.draw_rectangle(min_x, min_y, max_x, max_y, &e.color);
         }
+        for e in &game_state.bullets {
+            let min_x = e.pos_x - (e.width / 2.0);
+            let max_x = e.pos_x + (e.width / 2.0);
+            let min_y = e.pos_y - (e.height / 2.0);
+            let max_y = e.pos_y + (e.height / 2.0);
+            self.draw_rectangle(min_x, min_y, max_x, max_y, &e.color);
+        }
+
         unsafe {
             StretchDIBits(
                 self.hdc,
