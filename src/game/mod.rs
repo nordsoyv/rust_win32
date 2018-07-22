@@ -2,7 +2,6 @@ use entities::Bullet;
 use entities::Color;
 use entities::Entity;
 use entities::Force;
-use entities::{FEATURE_COLLIDABLE, FEATURE_PLAYER};
 use std::time::Duration;
 use std::time::Instant;
 
@@ -49,6 +48,7 @@ pub struct GameTime {
     pub game_start_time: Instant,
     pub frame_start_time: Instant,
     pub last_frame_time: Duration,
+    pub delta: f32,
 }
 
 impl GameTime {
@@ -57,6 +57,7 @@ impl GameTime {
             game_start_time: Instant::now(),
             frame_start_time: Instant::now(),
             last_frame_time: Duration::new(0, 0),
+            delta: 0.0,
         }
     }
 }
@@ -145,22 +146,62 @@ impl GameState {
 }
 
 pub fn game_loop(mut game_state: &mut GameState) -> bool {
-    move_bullets(&mut game_state);
-
-    let mut player = &mut game_state.players[0];
-
     if game_state.input.quit_key {
         return false;
     }
 
-    move_player(&game_state.input, player);
+    move_bullets(&mut game_state);
+    move_player(&mut game_state);
+    fire_bullets(&mut game_state);
+
+    let intersections = check_intersections(&game_state);
+    //    let mut player = &mut game_state.players[0];
+
+    handle_collisions(&mut game_state.players[0], intersections);
+
+    //println!("Frame {} ", game_state.frame);
+    //println!("Time taken for last frame: {:?}", game_state.last_frame_time);
+    //println!("Total time taken {:?}", game_state.game_start_time.elapsed());
+
+    return true;
+}
+
+fn handle_collisions(gs: &mut Entity, intersections: Option<Vec<Intersection>>) {
+    match intersections {
+    Some(inter) => {
+      for i in inter {
+        match i.hit_side {
+          Side::Left => {
+            gs.pos_x += i.amount;
+          }
+          Side::Right => {
+            gs.pos_x -= i.amount;
+          }
+          Side::Top => {
+            gs.pos_y -= i.amount;
+          }
+          Side::Bottom => {
+            gs.pos_y += i.amount;
+          }
+        }
+      }
+    } //println!("Got intersections : {}", inter.len()),
+    None => {}
+  }
+}
+
+const BULLET_VEL: f32 = 100.0;
+
+fn fire_bullets(game_state: &mut &mut GameState) {
+    let player = &game_state.players[0];
+
     if game_state.input.shoot_right {
         game_state.bullets.push(Entity::create_bullet(
             player.pos_x,
             player.pos_y,
             2.0,
             2.0,
-            100.0,
+            BULLET_VEL,
             0.0,
             Color {
                 r: 1.0,
@@ -171,37 +212,55 @@ pub fn game_loop(mut game_state: &mut GameState) -> bool {
         ))
     }
 
-    let mut intersections = None;
-
-    intersections = check_intersections(player, &game_state.walls);
-
-    match intersections {
-        Some(inter) => {
-            for i in inter {
-                match i.hit_side {
-                    Side::Left => {
-                        player.pos_x += i.amount;
-                    }
-                    Side::Right => {
-                        player.pos_x -= i.amount;
-                    }
-                    Side::Top => {
-                        player.pos_y -= i.amount;
-                    }
-                    Side::Bottom => {
-                        player.pos_y += i.amount;
-                    }
-                }
-            }
-        } //println!("Got intersections : {}", inter.len()),
-        None => {}
+    if game_state.input.shoot_left {
+        game_state.bullets.push(Entity::create_bullet(
+            player.pos_x,
+            player.pos_y,
+            2.0,
+            2.0,
+            -1.0 * BULLET_VEL,
+            0.0,
+            Color {
+                r: 1.0,
+                g: 0.1,
+                b: 0.1,
+                a: 1.0,
+            },
+        ))
     }
 
-    //println!("Frame {} ", game_state.frame);
-    //println!("Time taken for last frame: {:?}", game_state.last_frame_time);
-    //println!("Total time taken {:?}", game_state.game_start_time.elapsed());
-
-    return true;
+    if game_state.input.shoot_up {
+        game_state.bullets.push(Entity::create_bullet(
+            player.pos_x,
+            player.pos_y,
+            2.0,
+            2.0,
+            0.0,
+            BULLET_VEL,
+            Color {
+                r: 1.0,
+                g: 0.1,
+                b: 0.1,
+                a: 1.0,
+            },
+        ))
+    }
+    if game_state.input.shoot_down {
+        game_state.bullets.push(Entity::create_bullet(
+            player.pos_x,
+            player.pos_y,
+            2.0,
+            2.0,
+            0.0,
+            1.0 * BULLET_VEL,
+            Color {
+                r: 1.0,
+                g: 0.1,
+                b: 0.1,
+                a: 1.0,
+            },
+        ))
+    }
 }
 
 #[derive(Debug)]
@@ -220,7 +279,9 @@ struct Intersection {
     amount: f32,
 }
 
-fn check_intersections(player: &Entity, walls: &Vec<Entity>) -> Option<Vec<Intersection>> {
+fn check_intersections(gs: &GameState) -> Option<Vec<Intersection>> {
+    let walls = &gs.walls;
+    let player = &gs.players[0];
     let mut results = Vec::new();
     for mut other_e in &mut walls.iter() {
         let intersection = check_intersection(player, other_e);
@@ -311,31 +372,29 @@ fn check_intersection(player: &Entity, other: &Entity) -> Option<Intersection> {
 }
 
 fn move_bullets(game_state: &mut GameState) -> () {
-    let mut delta = game_state.time.last_frame_time.subsec_micros() as f32;
-    delta = delta / (1000.0 * 1000.0);
-
-    println!("delta {}", delta);
-
     for b in &mut game_state.bullets {
-        b.pos_x += b.vel_x * delta;
+        b.pos_x += b.vel_x * game_state.time.delta;
+        b.pos_y += b.vel_y * game_state.time.delta;
     }
 }
 
-fn move_player(input: &GameInput, e: &mut Entity) -> () {
+fn move_player(gs: &mut GameState) -> () {
+    let player = &mut gs.players[0];
+
     let mut step_size: f32 = 1.0;
-    if input.space {
+    if gs.input.space {
         step_size = 10.0;
     }
-    if input.up_key {
-        e.pos_y += step_size;
+    if gs.input.up_key {
+        player.pos_y += step_size;
     }
-    if input.down_key {
-        e.pos_y -= step_size;
+    if gs.input.down_key {
+        player.pos_y -= step_size;
     }
-    if input.left_key {
-        e.pos_x -= step_size;
+    if gs.input.left_key {
+        player.pos_x -= step_size;
     }
-    if input.right_key {
-        e.pos_x += step_size;
+    if gs.input.right_key {
+        player.pos_x += step_size;
     }
 }
