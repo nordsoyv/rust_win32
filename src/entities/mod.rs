@@ -1,7 +1,7 @@
 pub enum Force {
     Neutral,
     Player,
-    Enemy,
+    _Enemy,
 }
 
 #[derive(Debug)]
@@ -46,19 +46,12 @@ fn next_id() -> u32 {
     unsafe {
         let next = CURR_ID;
         CURR_ID += 1;
-        println!("Creating id {}", next);
+        //println!("Creating id {}", next);
         next
     }
 }
 
 impl Entity {
-    pub fn has_feature(&self, feature: u64) -> bool {
-        if self.features & feature != 0 {
-            return true;
-        }
-        false
-    }
-
     pub fn create_static(
         x: f32,
         y: f32,

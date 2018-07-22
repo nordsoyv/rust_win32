@@ -1,5 +1,4 @@
 use entities::Color;
-use entities::FEATURE_DRAWABLE;
 use game::GameState;
 use libc;
 use renderer::Renderer;
