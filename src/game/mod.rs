@@ -252,7 +252,7 @@ fn fire_bullets(game_state: &mut &mut GameState) {
             2.0,
             2.0,
             0.0,
-            1.0 * BULLET_VEL,
+            -1.0 * BULLET_VEL,
             Color {
                 r: 1.0,
                 g: 0.1,
