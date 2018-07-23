@@ -9,7 +9,7 @@ pub struct GameState {
     pub frame: u32,
     pub input: GameInput,
     pub time: GameTime,
-    pub players: Vec<Entity>,
+    pub player: Entity,
     pub walls: Vec<Entity>,
     pub bullets: Vec<Bullet>,
 }
@@ -64,9 +64,7 @@ impl GameTime {
 
 impl GameState {
     pub fn new() -> GameState {
-        let mut players = Vec::new();
-        let mut walls = Vec::new();
-        players.push(Entity::create_player(
+        let mut player = Entity::create_player(
             10.0,
             10.0,
             20.0,
@@ -77,7 +75,8 @@ impl GameState {
                 b: 1.0,
                 a: 1.0,
             },
-        ));
+        );
+        let mut walls = Vec::new();
 
         walls.push(Entity::create_static(
             2.0,
@@ -138,7 +137,7 @@ impl GameState {
             input: GameInput::new(),
             frame: 0,
             time: GameTime::new(),
-            players,
+            player,
             walls,
             bullets: Vec::new(),
         }
@@ -157,7 +156,7 @@ pub fn game_loop(mut game_state: &mut GameState) -> bool {
     let intersections = check_intersections(&game_state);
     //    let mut player = &mut game_state.players[0];
 
-    handle_collisions(&mut game_state.players[0], intersections);
+    handle_collisions(&mut game_state.player, intersections);
 
     //println!("Frame {} ", game_state.frame);
     //println!("Time taken for last frame: {:?}", game_state.last_frame_time);
@@ -193,7 +192,7 @@ fn handle_collisions(gs: &mut Entity, intersections: Option<Vec<Intersection>>) 
 const BULLET_VEL: f32 = 100.0;
 
 fn fire_bullets(game_state: &mut &mut GameState) {
-    let player = &game_state.players[0];
+    let player = &game_state.player;
 
     if game_state.input.shoot_right {
         game_state.bullets.push(Entity::create_bullet(
@@ -281,7 +280,7 @@ struct Intersection {
 
 fn check_intersections(gs: &GameState) -> Option<Vec<Intersection>> {
     let walls = &gs.walls;
-    let player = &gs.players[0];
+    let player = &gs.player;
     let mut results = Vec::new();
     for mut other_e in &mut walls.iter() {
         let intersection = check_intersection(player, other_e);
@@ -379,7 +378,7 @@ fn move_bullets(game_state: &mut GameState) -> () {
 }
 
 fn move_player(gs: &mut GameState) -> () {
-    let player = &mut gs.players[0];
+    let player = &mut gs.player;
 
     let mut step_size: f32 = 1.0;
     if gs.input.space {
