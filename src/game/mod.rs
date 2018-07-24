@@ -12,6 +12,8 @@ pub struct GameState {
     pub player: Entity,
     pub walls: Vec<Entity>,
     pub bullets: Vec<Bullet>,
+    pub world_size_x: f32,
+    pub world_size_y: f32,
 }
 
 pub struct GameInput {
@@ -63,8 +65,8 @@ impl GameTime {
 }
 
 impl GameState {
-    pub fn new() -> GameState {
-        let mut player = Entity::create_player(
+    pub fn new(size_x: f32, size_y: f32) -> GameState {
+        let player = Entity::create_player(
             10.0,
             10.0,
             20.0,
@@ -140,6 +142,8 @@ impl GameState {
             player,
             walls,
             bullets: Vec::new(),
+            world_size_x: size_x,
+            world_size_y: size_x,
         }
     }
 }
@@ -149,7 +153,7 @@ pub fn game_loop(mut game_state: &mut GameState) -> bool {
         return false;
     }
 
-    move_bullets(&mut game_state);
+    update_bullets(&mut game_state);
     move_player(&mut game_state);
     fire_bullets(&mut game_state);
 
@@ -167,26 +171,26 @@ pub fn game_loop(mut game_state: &mut GameState) -> bool {
 
 fn handle_collisions(gs: &mut Entity, intersections: Option<Vec<Intersection>>) {
     match intersections {
-    Some(inter) => {
-      for i in inter {
-        match i.hit_side {
-          Side::Left => {
-            gs.pos_x += i.amount;
-          }
-          Side::Right => {
-            gs.pos_x -= i.amount;
-          }
-          Side::Top => {
-            gs.pos_y -= i.amount;
-          }
-          Side::Bottom => {
-            gs.pos_y += i.amount;
-          }
-        }
-      }
-    } //println!("Got intersections : {}", inter.len()),
-    None => {}
-  }
+        Some(inter) => {
+            for i in inter {
+                match i.hit_side {
+                    Side::Left => {
+                        gs.pos_x += i.amount;
+                    }
+                    Side::Right => {
+                        gs.pos_x -= i.amount;
+                    }
+                    Side::Top => {
+                        gs.pos_y -= i.amount;
+                    }
+                    Side::Bottom => {
+                        gs.pos_y += i.amount;
+                    }
+                }
+            }
+        } //println!("Got intersections : {}", inter.len()),
+        None => {}
+    }
 }
 
 const BULLET_VEL: f32 = 100.0;
@@ -370,10 +374,29 @@ fn check_intersection(player: &Entity, other: &Entity) -> Option<Intersection> {
     None
 }
 
-fn move_bullets(game_state: &mut GameState) -> () {
+fn update_bullets(game_state: &mut GameState) -> () {
+    let mut bullets_to_delete: Vec<usize> = Vec::new();
+    let mut index: usize = 0;
+
     for b in &mut game_state.bullets {
         b.pos_x += b.vel_x * game_state.time.delta;
         b.pos_y += b.vel_y * game_state.time.delta;
+
+        if b.pos_x < 0.0
+            || b.pos_x > game_state.world_size_x
+            || b.pos_y < 0.0
+            || b.pos_y > game_state.world_size_y
+        {
+            bullets_to_delete.push(index);
+        }
+        index += 1;
+    }
+
+    if bullets_to_delete.len() > 0 {
+        bullets_to_delete.reverse();
+        for index_to_delete in bullets_to_delete {
+            game_state.bullets.remove(index_to_delete);
+        }
     }
 }
 

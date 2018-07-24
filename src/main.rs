@@ -195,7 +195,7 @@ fn main() {
     hide_console_window();
 
     let mut window = create_window("my_window", "Portfolio manager pro").unwrap();
-    let mut game_state = GameState::new();
+    let mut game_state = GameState::new(960.0, 540.0);
     let mut renderer = renderer::create_simple_renderer(window.handle, 960, 540);
     loop {
         if main_loop(&mut window, &mut game_state, &mut renderer) {
