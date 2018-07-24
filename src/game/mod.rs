@@ -143,7 +143,7 @@ impl GameState {
             walls,
             bullets: Vec::new(),
             world_size_x: size_x,
-            world_size_y: size_x,
+            world_size_y: size_y,
         }
     }
 }
@@ -198,64 +198,31 @@ const BULLET_VEL: f32 = 100.0;
 fn fire_bullets(game_state: &mut &mut GameState) {
     let player = &game_state.player;
 
-    if game_state.input.shoot_right {
-        game_state.bullets.push(Entity::create_bullet(
-            player.pos_x,
-            player.pos_y,
-            2.0,
-            2.0,
-            BULLET_VEL,
-            0.0,
-            Color {
-                r: 1.0,
-                g: 0.1,
-                b: 0.1,
-                a: 1.0,
-            },
-        ))
-    }
+    let mut vel_x: f32 = 0.0;
+    let mut vel_y: f32 = 0.0;
 
+    if game_state.input.shoot_right {
+        vel_x += BULLET_VEL;
+    }
     if game_state.input.shoot_left {
-        game_state.bullets.push(Entity::create_bullet(
-            player.pos_x,
-            player.pos_y,
-            2.0,
-            2.0,
-            -1.0 * BULLET_VEL,
-            0.0,
-            Color {
-                r: 1.0,
-                g: 0.1,
-                b: 0.1,
-                a: 1.0,
-            },
-        ))
+        vel_x += BULLET_VEL * -1.0;
     }
 
     if game_state.input.shoot_up {
-        game_state.bullets.push(Entity::create_bullet(
-            player.pos_x,
-            player.pos_y,
-            2.0,
-            2.0,
-            0.0,
-            BULLET_VEL,
-            Color {
-                r: 1.0,
-                g: 0.1,
-                b: 0.1,
-                a: 1.0,
-            },
-        ))
+        vel_y += BULLET_VEL;
     }
     if game_state.input.shoot_down {
+        vel_y += BULLET_VEL * -1.0;
+    }
+
+    if vel_y != 0.0 || vel_x != 0.0 {
         game_state.bullets.push(Entity::create_bullet(
             player.pos_x,
             player.pos_y,
             2.0,
             2.0,
-            0.0,
-            -1.0 * BULLET_VEL,
+            vel_x,
+            vel_y,
             Color {
                 r: 1.0,
                 g: 0.1,
@@ -263,7 +230,7 @@ fn fire_bullets(game_state: &mut &mut GameState) {
                 a: 1.0,
             },
         ))
-    }
+    };
 }
 
 #[derive(Debug)]
