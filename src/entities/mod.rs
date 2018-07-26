@@ -4,7 +4,6 @@ pub mod wall;
 
 use math::vector::Vector2d;
 
-
 #[derive(Debug)]
 pub struct Color {
     pub r: f32,
@@ -12,8 +11,6 @@ pub struct Color {
     pub b: f32,
     pub a: f32,
 }
-
-
 
 pub trait Position {
     fn get_position(&self) -> Vector2d;
@@ -25,8 +22,8 @@ pub trait Collider: Position {
     fn get_bounding_box(&self) -> BoundingBox;
 }
 
-pub trait Drawable : Collider {
-    fn get_color(&self)-> &Color;
+pub trait Drawable: Collider {
+    fn get_color(&self) -> &Color;
 }
 
 pub struct BoundingBox {
@@ -35,6 +32,3 @@ pub struct BoundingBox {
     pub top: f32,
     pub bottom: f32,
 }
-
-
-

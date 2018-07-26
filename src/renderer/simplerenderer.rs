@@ -1,4 +1,5 @@
 use entities::Color;
+use entities::Drawable;
 use game::GameState;
 use libc;
 use renderer::Renderer;
@@ -12,7 +13,6 @@ use winapi::um::wingdi::{
 };
 use winapi::um::winnt::{MEM_COMMIT, MEM_RELEASE, PAGE_READWRITE};
 use winapi::um::winuser::{GetClientRect, GetDC};
-use entities::Drawable;
 
 struct OffscreenBuffer {
     info: BITMAPINFO,
@@ -89,10 +89,15 @@ pub fn create_simple_renderer(
 }
 
 impl SimpleRenderer {
-
-    fn draw_obj(&self, obj : &Drawable){
+    fn draw_obj(&self, obj: &Drawable) {
         let rect = obj.get_bounding_box();
-        self.draw_rectangle(rect.left, rect.bottom,rect.right,rect.top, obj.get_color())
+        self.draw_rectangle(
+            rect.left,
+            rect.bottom,
+            rect.right,
+            rect.top,
+            obj.get_color(),
+        )
     }
 
     fn draw_rectangle(&self, min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: &Color) {

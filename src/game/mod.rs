@@ -1,8 +1,7 @@
 use entities::bullet::Bullet;
-use entities::Collider;
-//use entities::Bullet;
 use entities::player::Player;
 use entities::wall::Wall;
+use entities::Collider;
 use entities::Position;
 use math::vector::Vector2d;
 use std::time::Duration;
@@ -144,7 +143,6 @@ fn handle_collisions(player: &mut Player, intersections: Option<Vec<Intersection
     }
 }
 
-
 fn fire_bullets(game_state: &mut &mut GameState) {
     let player = &game_state.player;
 
@@ -165,7 +163,6 @@ fn fire_bullets(game_state: &mut &mut GameState) {
     if direction.len() > 0.5 {
         let bullet = Bullet::new(player.get_position(), direction);
         game_state.bullets.push(bullet);
-
     }
 
     //    if vel_y != 0.0 || vel_x != 0.0 {
@@ -280,8 +277,7 @@ fn update_bullets(game_state: &mut GameState) -> () {
     let mut bullets_to_delete: Vec<usize> = Vec::new();
     let mut index: usize = 0;
 
-    for b  in &mut game_state.bullets {
-
+    for b in &mut game_state.bullets {
         b.update(game_state.time.delta);
 
         let pos = b.get_position();

@@ -1,10 +1,10 @@
 use entities::BoundingBox;
 use entities::Collider;
 use entities::Color;
+use entities::Drawable;
 use entities::Position;
 use game::GameInput;
 use math::vector::Vector2d;
-use entities::Drawable;
 
 pub struct Player {
     pos: Vector2d,

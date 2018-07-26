@@ -1,9 +1,9 @@
 use entities::BoundingBox;
 use entities::Collider;
 use entities::Color;
+use entities::Drawable;
 use entities::Position;
 use math::vector::Vector2d;
-use entities::Drawable;
 
 pub struct Wall {
     pos: Vector2d,

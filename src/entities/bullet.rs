@@ -1,9 +1,9 @@
 use entities::BoundingBox;
 use entities::Collider;
 use entities::Color;
+use entities::Drawable;
 use entities::Position;
 use math::vector::Vector2d;
-use entities::Drawable;
 
 pub struct Bullet {
     pos: Vector2d,
@@ -29,7 +29,7 @@ impl Bullet {
         }
     }
 
-    pub fn update(&mut self, delta : f32) {
+    pub fn update(&mut self, delta: f32) {
         self.pos.x += self.vel.x * delta;
         self.pos.y += self.vel.y * delta;
     }
