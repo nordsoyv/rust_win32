@@ -1,5 +1,4 @@
 use entities::Color;
-use entities::Entity;
 use game::GameState;
 use libc;
 use renderer::Renderer;
@@ -13,6 +12,7 @@ use winapi::um::wingdi::{
 };
 use winapi::um::winnt::{MEM_COMMIT, MEM_RELEASE, PAGE_READWRITE};
 use winapi::um::winuser::{GetClientRect, GetDC};
+use entities::Drawable;
 
 struct OffscreenBuffer {
     info: BITMAPINFO,
@@ -89,12 +89,10 @@ pub fn create_simple_renderer(
 }
 
 impl SimpleRenderer {
-    fn draw_player(&mut self, player: &Entity) {
-        let min_x = player.pos_x - (player.width / 2.0);
-        let max_x = player.pos_x + (player.width / 2.0);
-        let min_y = player.pos_y - (player.height / 2.0);
-        let max_y = player.pos_y + (player.height / 2.0);
-        self.draw_rectangle(min_x, min_y, max_x, max_y, &player.color);
+
+    fn draw_obj(&self, obj : &Drawable){
+        let rect = obj.get_bounding_box();
+        self.draw_rectangle(rect.left, rect.bottom,rect.right,rect.top, obj.get_color())
     }
 
     fn draw_rectangle(&self, min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: &Color) {
@@ -173,20 +171,12 @@ impl SimpleRenderer {
 impl Renderer for SimpleRenderer {
     fn render_frame(&mut self, game_state: &mut GameState) {
         self.clear_screen();
-        self.draw_player(&game_state.player);
+        self.draw_obj(&game_state.player);
         for e in &game_state.walls {
-            let min_x = e.pos_x - (e.width / 2.0);
-            let max_x = e.pos_x + (e.width / 2.0);
-            let min_y = e.pos_y - (e.height / 2.0);
-            let max_y = e.pos_y + (e.height / 2.0);
-            self.draw_rectangle(min_x, min_y, max_x, max_y, &e.color);
+            self.draw_obj(e);
         }
         for e in &game_state.bullets {
-            let min_x = e.pos_x - (e.width / 2.0);
-            let max_x = e.pos_x + (e.width / 2.0);
-            let min_y = e.pos_y - (e.height / 2.0);
-            let max_y = e.pos_y + (e.height / 2.0);
-            self.draw_rectangle(min_x, min_y, max_x, max_y, &e.color);
+            self.draw_obj(e);
         }
 
         unsafe {

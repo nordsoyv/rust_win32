@@ -45,6 +45,7 @@ use std::time::Instant;
 
 mod entities;
 mod game;
+mod math;
 mod renderer;
 
 // We have to encode text to wide format for Windows

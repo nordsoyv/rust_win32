@@ -1,7 +1,10 @@
-use entities::Bullet;
-use entities::Color;
-use entities::Entity;
-use entities::Force;
+use entities::bullet::Bullet;
+use entities::Collider;
+//use entities::Bullet;
+use entities::player::Player;
+use entities::wall::Wall;
+use entities::Position;
+use math::vector::Vector2d;
 use std::time::Duration;
 use std::time::Instant;
 
@@ -9,8 +12,8 @@ pub struct GameState {
     pub frame: u32,
     pub input: GameInput,
     pub time: GameTime,
-    pub player: Entity,
-    pub walls: Vec<Entity>,
+    pub player: Player,
+    pub walls: Vec<Wall>,
     pub bullets: Vec<Bullet>,
     pub world_size_x: f32,
     pub world_size_y: f32,
@@ -66,73 +69,20 @@ impl GameTime {
 
 impl GameState {
     pub fn new(size_x: f32, size_y: f32) -> GameState {
-        let player = Entity::create_player(
-            10.0,
-            10.0,
-            20.0,
-            20.0,
-            Color {
-                r: 1.0,
-                g: 1.0,
-                b: 1.0,
-                a: 1.0,
-            },
-        );
+        let player = Player::new();
         let mut walls = Vec::new();
 
-        walls.push(Entity::create_static(
-            2.0,
-            540.0 / 2.0,
+        walls.push(Wall::new(Vector2d::new(2.0, 540.0 / 2.0), 4.0, 540.0));
+        walls.push(Wall::new(
+            Vector2d::new(960.0 - 2.0, 540.0 / 2.0),
             4.0,
             540.0,
-            Color {
-                r: 1.0,
-                g: 0.0,
-                b: 0.0,
-                a: 1.0,
-            },
-            Force::Neutral,
         ));
-
-        walls.push(Entity::create_static(
-            960.0 - 2.0,
-            540.0 / 2.0,
-            4.0,
-            540.0,
-            Color {
-                r: 1.0,
-                g: 0.0,
-                b: 0.0,
-                a: 1.0,
-            },
-            Force::Neutral,
-        ));
-
-        walls.push(Entity::create_static(
-            960.0 / 2.0,
-            2.0,
+        walls.push(Wall::new(Vector2d::new(960.0 / 2.0, 2.0), 960.0, 4.0));
+        walls.push(Wall::new(
+            Vector2d::new(960.0 / 2.0, 540.0 - 2.0),
             960.0,
             4.0,
-            Color {
-                r: 1.0,
-                g: 0.0,
-                b: 0.0,
-                a: 1.0,
-            },
-            Force::Neutral,
-        ));
-        walls.push(Entity::create_static(
-            960.0 / 2.0,
-            540.0 - 2.0,
-            960.0,
-            4.0,
-            Color {
-                r: 1.0,
-                g: 0.0,
-                b: 0.0,
-                a: 1.0,
-            },
-            Force::Neutral,
         ));
 
         GameState {
@@ -154,7 +104,7 @@ pub fn game_loop(mut game_state: &mut GameState) -> bool {
     }
 
     update_bullets(&mut game_state);
-    move_player(&mut game_state);
+    game_state.player.update(&game_state.input);
     fire_bullets(&mut game_state);
 
     let intersections = check_intersections(&game_state);
@@ -169,22 +119,23 @@ pub fn game_loop(mut game_state: &mut GameState) -> bool {
     return true;
 }
 
-fn handle_collisions(gs: &mut Entity, intersections: Option<Vec<Intersection>>) {
+fn handle_collisions(player: &mut Player, intersections: Option<Vec<Intersection>>) {
+    let player_pos = player.get_position();
     match intersections {
         Some(inter) => {
             for i in inter {
                 match i.hit_side {
                     Side::Left => {
-                        gs.pos_x += i.amount;
+                        player.set_x(player_pos.x + i.amount);
                     }
                     Side::Right => {
-                        gs.pos_x -= i.amount;
+                        player.set_x(player_pos.x - i.amount);
                     }
                     Side::Top => {
-                        gs.pos_y -= i.amount;
+                        player.set_y(player_pos.y + i.amount);
                     }
                     Side::Bottom => {
-                        gs.pos_y += i.amount;
+                        player.set_y(player_pos.y - i.amount);
                     }
                 }
             }
@@ -193,44 +144,46 @@ fn handle_collisions(gs: &mut Entity, intersections: Option<Vec<Intersection>>) 
     }
 }
 
-const BULLET_VEL: f32 = 100.0;
 
 fn fire_bullets(game_state: &mut &mut GameState) {
     let player = &game_state.player;
 
-    let mut vel_x: f32 = 0.0;
-    let mut vel_y: f32 = 0.0;
+    let mut direction = Vector2d { x: 0.0, y: 0.0 };
 
     if game_state.input.shoot_right {
-        vel_x += BULLET_VEL;
+        direction.x += 1.0;
     }
     if game_state.input.shoot_left {
-        vel_x += BULLET_VEL * -1.0;
+        direction.x -= 1.0;
     }
-
     if game_state.input.shoot_up {
-        vel_y += BULLET_VEL;
+        direction.y += 1.0;
     }
     if game_state.input.shoot_down {
-        vel_y += BULLET_VEL * -1.0;
+        direction.y -= 1.0;
+    }
+    if direction.len() > 0.5 {
+        let bullet = Bullet::new(player.get_position(), direction);
+        game_state.bullets.push(bullet);
+
     }
 
-    if vel_y != 0.0 || vel_x != 0.0 {
-        game_state.bullets.push(Entity::create_bullet(
-            player.pos_x,
-            player.pos_y,
-            2.0,
-            2.0,
-            vel_x,
-            vel_y,
-            Color {
-                r: 1.0,
-                g: 0.1,
-                b: 0.1,
-                a: 1.0,
-            },
-        ))
-    };
+    //    if vel_y != 0.0 || vel_x != 0.0 {
+    //        game_state.bullets.push(Entity::create_bullet(
+    //            player.pos_x,
+    //            player.pos_y,
+    //            2.0,
+    //            2.0,
+    //            vel_x,
+    //            vel_y,
+    //            Color {
+    //                r: 1.0,
+    //                g: 0.1,
+    //                b: 0.1,
+    //                a: 1.0,
+    //            },
+    //        ))
+    //    };
 }
 
 #[derive(Debug)]
@@ -243,8 +196,6 @@ enum Side {
 
 #[derive(Debug)]
 struct Intersection {
-    entity1: u32,
-    entity2: u32,
     hit_side: Side,
     amount: f32,
 }
@@ -269,21 +220,13 @@ fn check_intersections(gs: &GameState) -> Option<Vec<Intersection>> {
     return None;
 }
 
-fn check_intersection(player: &Entity, other: &Entity) -> Option<Intersection> {
-    let player_left = player.pos_x - (player.width / 2.0);
-    let player_right = player.pos_x + (player.width / 2.0);
-    let player_top = player.pos_y + (player.height / 2.0);
-    let player_bottom = player.pos_y - (player.height / 2.0);
-
-    let other_left = other.pos_x - (other.width / 2.0);
-    let other_right = other.pos_x + (other.width / 2.0);
-    let other_top = other.pos_y + (other.height / 2.0);
-    let other_bottom = other.pos_y - (other.height / 2.0);
-
-    let left_side_intersection = player_left - other_right;
-    let right_side_intersection = other_left - player_right;
-    let top_side_intersection = other_bottom - player_top;
-    let bottom_side_intersection = player_bottom - other_top;
+fn check_intersection(player: &Collider, other: &Collider) -> Option<Intersection> {
+    let player_bb = player.get_bounding_box();
+    let other_bb = other.get_bounding_box();
+    let left_side_intersection = player_bb.left - other_bb.right;
+    let right_side_intersection = other_bb.left - player_bb.right;
+    let top_side_intersection = other_bb.bottom - player_bb.top;
+    let bottom_side_intersection = player_bb.bottom - other_bb.top;
 
     if left_side_intersection < 0.0
         && right_side_intersection < 0.0
@@ -295,8 +238,6 @@ fn check_intersection(player: &Entity, other: &Entity) -> Option<Intersection> {
             && left_side_intersection >= bottom_side_intersection
         {
             return Some(Intersection {
-                entity1: player.id,
-                entity2: other.id,
                 hit_side: Side::Left,
                 amount: left_side_intersection * -1.0,
             });
@@ -307,8 +248,6 @@ fn check_intersection(player: &Entity, other: &Entity) -> Option<Intersection> {
             && right_side_intersection >= bottom_side_intersection
         {
             return Some(Intersection {
-                entity1: player.id,
-                entity2: other.id,
                 hit_side: Side::Right,
                 amount: right_side_intersection * -1.0,
             });
@@ -319,8 +258,6 @@ fn check_intersection(player: &Entity, other: &Entity) -> Option<Intersection> {
             && top_side_intersection >= bottom_side_intersection
         {
             return Some(Intersection {
-                entity1: player.id,
-                entity2: other.id,
                 hit_side: Side::Top,
                 amount: top_side_intersection * -1.0,
             });
@@ -331,8 +268,6 @@ fn check_intersection(player: &Entity, other: &Entity) -> Option<Intersection> {
             && bottom_side_intersection >= right_side_intersection
         {
             return Some(Intersection {
-                entity1: player.id,
-                entity2: other.id,
                 hit_side: Side::Bottom,
                 amount: bottom_side_intersection * -1.0,
             });
@@ -345,14 +280,16 @@ fn update_bullets(game_state: &mut GameState) -> () {
     let mut bullets_to_delete: Vec<usize> = Vec::new();
     let mut index: usize = 0;
 
-    for b in &mut game_state.bullets {
-        b.pos_x += b.vel_x * game_state.time.delta;
-        b.pos_y += b.vel_y * game_state.time.delta;
+    for b  in &mut game_state.bullets {
 
-        if b.pos_x < 0.0
-            || b.pos_x > game_state.world_size_x
-            || b.pos_y < 0.0
-            || b.pos_y > game_state.world_size_y
+        b.update(game_state.time.delta);
+
+        let pos = b.get_position();
+
+        if pos.x < 0.0
+            || pos.x > game_state.world_size_x
+            || pos.y < 0.0
+            || pos.y > game_state.world_size_y
         {
             bullets_to_delete.push(index);
         }
@@ -364,26 +301,5 @@ fn update_bullets(game_state: &mut GameState) -> () {
         for index_to_delete in bullets_to_delete {
             game_state.bullets.remove(index_to_delete);
         }
-    }
-}
-
-fn move_player(gs: &mut GameState) -> () {
-    let player = &mut gs.player;
-
-    let mut step_size: f32 = 1.0;
-    if gs.input.space {
-        step_size = 10.0;
-    }
-    if gs.input.up_key {
-        player.pos_y += step_size;
-    }
-    if gs.input.down_key {
-        player.pos_y -= step_size;
-    }
-    if gs.input.left_key {
-        player.pos_x -= step_size;
-    }
-    if gs.input.right_key {
-        player.pos_x += step_size;
     }
 }
