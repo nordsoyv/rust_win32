@@ -107,14 +107,8 @@ pub fn game_loop(mut game_state: &mut GameState) -> bool {
     fire_bullets(&mut game_state);
 
     let intersections = check_intersections(&game_state);
-    //    let mut player = &mut game_state.players[0];
 
     handle_collisions(&mut game_state.player, intersections);
-
-    //println!("Frame {} ", game_state.frame);
-    //println!("Time taken for last frame: {:?}", game_state.last_frame_time);
-    //println!("Total time taken {:?}", game_state.game_start_time.elapsed());
-
     return true;
 }
 
@@ -138,7 +132,7 @@ fn handle_collisions(player: &mut Player, intersections: Option<Vec<Intersection
                     }
                 }
             }
-        } //println!("Got intersections : {}", inter.len()),
+        }
         None => {}
     }
 }
@@ -165,22 +159,6 @@ fn fire_bullets(game_state: &mut &mut GameState) {
         game_state.bullets.push(bullet);
     }
 
-    //    if vel_y != 0.0 || vel_x != 0.0 {
-    //        game_state.bullets.push(Entity::create_bullet(
-    //            player.pos_x,
-    //            player.pos_y,
-    //            2.0,
-    //            2.0,
-    //            vel_x,
-    //            vel_y,
-    //            Color {
-    //                r: 1.0,
-    //                g: 0.1,
-    //                b: 0.1,
-    //                a: 1.0,
-    //            },
-    //        ))
-    //    };
 }
 
 #[derive(Debug)]
