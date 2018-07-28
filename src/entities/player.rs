@@ -1,8 +1,11 @@
+use entities::bullet::Bullet;
 use entities::BoundingBox;
 use entities::Collider;
 use entities::Color;
 use entities::Drawable;
+use entities::Intersection;
 use entities::Position;
+use entities::Side;
 use game::GameInput;
 use math::vector::Vector2d;
 
@@ -31,7 +34,12 @@ impl Player {
         }
     }
 
-    pub fn update(&mut self, input: &GameInput) {
+    pub fn update(&mut self, input: &GameInput, bullets: &mut Vec<Bullet>) {
+        self.update_pos(&input);
+        self.fire_bullets(&input, bullets);
+    }
+
+    fn update_pos(&mut self, input: &GameInput) {
         let mut step_size: f32 = 1.0;
         if input.space {
             step_size = 10.0;
@@ -47,6 +55,53 @@ impl Player {
         }
         if input.right_key {
             self.pos.x += step_size;
+        }
+    }
+
+    fn fire_bullets(&self, input: &GameInput, bullets: &mut Vec<Bullet>) {
+        let mut direction = Vector2d { x: 0.0, y: 0.0 };
+
+        if input.shoot_right {
+            direction.x += 1.0;
+        }
+        if input.shoot_left {
+            direction.x -= 1.0;
+        }
+        if input.shoot_up {
+            direction.y += 1.0;
+        }
+        if input.shoot_down {
+            direction.y -= 1.0;
+        }
+        if direction.len() > 0.5 {
+            let bullet = Bullet::new(self.get_position(), direction);
+            bullets.push(bullet);
+        }
+    }
+
+    pub fn handle_collisions(&mut self, intersections: Option<Vec<Intersection>>) {
+        let player_pos = self.get_position();
+
+        match intersections {
+            Some(inter) => {
+                for i in inter {
+                    match i.hit_side {
+                        Side::Left => {
+                            self.set_x(player_pos.x + i.amount);
+                        }
+                        Side::Right => {
+                            self.set_x(player_pos.x - i.amount);
+                        }
+                        Side::Top => {
+                            self.set_y(player_pos.y - i.amount);
+                        }
+                        Side::Bottom => {
+                            self.set_y(player_pos.y + i.amount);
+                        }
+                    }
+                }
+            }
+            None => {}
         }
     }
 }

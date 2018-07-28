@@ -32,3 +32,17 @@ pub struct BoundingBox {
     pub top: f32,
     pub bottom: f32,
 }
+
+#[derive(Debug)]
+pub enum Side {
+    Left,
+    Right,
+    Top,
+    Bottom,
+}
+
+#[derive(Debug)]
+pub struct Intersection {
+    pub hit_side: Side,
+    pub amount: f32,
+}
