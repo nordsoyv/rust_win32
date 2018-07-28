@@ -1,7 +1,7 @@
 pub mod bullet;
+pub mod cooldown;
 pub mod player;
 pub mod wall;
-pub mod cooldown;
 
 use math::vector::Vector2d;
 

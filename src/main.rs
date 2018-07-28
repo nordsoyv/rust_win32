@@ -217,6 +217,9 @@ fn main_loop(window: &mut Window, game_state: &mut GameState, renderer: &mut Ren
     let delta = game_state.time.last_frame_time.subsec_micros() as f32;
     game_state.time.delta = delta / (1000.0 * 1000.0);
 
+    let total_time = game_state.time.game_start_time.elapsed();
+    game_state.time.time_elapsed = total_time.as_secs() as f32;
+    game_state.time.time_elapsed += total_time.subsec_micros() as f32 / (1000.0 * 1000.0);
     get_input(game_state);
 
     let continue_running = game_loop(game_state);

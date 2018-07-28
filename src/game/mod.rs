@@ -54,6 +54,7 @@ pub struct GameTime {
     pub game_start_time: Instant,
     pub frame_start_time: Instant,
     pub last_frame_time: Duration,
+    pub time_elapsed: f32,
     pub delta: f32,
 }
 
@@ -63,6 +64,7 @@ impl GameTime {
             game_start_time: Instant::now(),
             frame_start_time: Instant::now(),
             last_frame_time: Duration::new(0, 0),
+            time_elapsed: 0.0,
             delta: 0.0,
         }
     }
@@ -79,7 +81,8 @@ pub fn game_loop(game_state: &mut GameState) -> bool {
 impl GameState {
     pub fn update(&mut self) {
         self.update_bullets();
-        self.player.update(&self.input, &mut self.bullets, self.time.delta);
+        self.player
+            .update(&self.input, &mut self.bullets, self.time.delta);
 
         let intersections = self.check_intersections();
 
@@ -91,7 +94,7 @@ impl GameState {
         let mut index: usize = 0;
 
         for b in &mut self.bullets {
-            b.update(self.time.delta);
+            b.update(&self.time);
 
             let pos = b.get_position();
 

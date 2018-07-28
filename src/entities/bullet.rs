@@ -3,6 +3,7 @@ use entities::Collider;
 use entities::Color;
 use entities::Drawable;
 use entities::Position;
+use game::GameTime;
 use math::vector::Vector2d;
 
 pub struct Bullet {
@@ -13,7 +14,7 @@ pub struct Bullet {
     vel: Vector2d,
 }
 
-const VEL : f32 = 300.0;
+const VEL: f32 = 300.0;
 
 impl Bullet {
     pub fn new(pos: Vector2d, direction: Vector2d) -> Bullet {
@@ -31,9 +32,14 @@ impl Bullet {
         }
     }
 
-    pub fn update(&mut self, delta: f32) {
-        self.pos.x += self.vel.x * delta;
-        self.pos.y += self.vel.y * delta;
+    pub fn update(&mut self, time: &GameTime) {
+        self.pos.x += self.vel.x * time.delta;
+        self.pos.y += self.vel.y * time.delta;
+        let mut red_color = (time.time_elapsed * 5.0).sin();
+        red_color += 1.0;
+        red_color /= 4.0;
+        red_color += 0.5;
+        self.color.r = red_color;
     }
 }
 

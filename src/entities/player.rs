@@ -1,4 +1,5 @@
 use entities::bullet::Bullet;
+use entities::cooldown::Cooldown;
 use entities::BoundingBox;
 use entities::Collider;
 use entities::Color;
@@ -8,16 +9,13 @@ use entities::Position;
 use entities::Side;
 use game::GameInput;
 use math::vector::Vector2d;
-use entities::cooldown::Cooldown;
-
-
 
 pub struct Player {
     pos: Vector2d,
     width: f32,
     height: f32,
     color: Color,
-    shoot_cooldown : Cooldown,
+    shoot_cooldown: Cooldown,
 }
 
 impl Player {
@@ -35,7 +33,7 @@ impl Player {
                 b: 1.0,
                 a: 1.0,
             },
-            shoot_cooldown : Cooldown::new(0.1),
+            shoot_cooldown: Cooldown::new(0.1),
         }
     }
 
@@ -85,7 +83,6 @@ impl Player {
                 bullets.push(bullet);
             }
         }
-
     }
 
     pub fn handle_collisions(&mut self, intersections: Option<Vec<Intersection>>) {
