@@ -79,7 +79,7 @@ pub fn game_loop(game_state: &mut GameState) -> bool {
 impl GameState {
     pub fn update(&mut self) {
         self.update_bullets();
-        self.player.update(&self.input, &mut self.bullets);
+        self.player.update(&self.input, &mut self.bullets, self.time.delta);
 
         let intersections = self.check_intersections();
 

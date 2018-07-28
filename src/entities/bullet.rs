@@ -13,19 +13,21 @@ pub struct Bullet {
     vel: Vector2d,
 }
 
+const VEL : f32 = 300.0;
+
 impl Bullet {
     pub fn new(pos: Vector2d, direction: Vector2d) -> Bullet {
         Bullet {
             pos,
-            width: 2.0,
-            height: 2.0,
+            width: 4.0,
+            height: 4.0,
             color: Color {
                 r: 1.0,
                 g: 0.1,
                 b: 0.1,
                 a: 1.0,
             },
-            vel: direction.mul(100.0),
+            vel: direction.mul(VEL),
         }
     }
 

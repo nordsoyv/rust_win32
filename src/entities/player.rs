@@ -8,12 +8,16 @@ use entities::Position;
 use entities::Side;
 use game::GameInput;
 use math::vector::Vector2d;
+use entities::cooldown::Cooldown;
+
+
 
 pub struct Player {
     pos: Vector2d,
     width: f32,
     height: f32,
     color: Color,
+    shoot_cooldown : Cooldown,
 }
 
 impl Player {
@@ -31,10 +35,12 @@ impl Player {
                 b: 1.0,
                 a: 1.0,
             },
+            shoot_cooldown : Cooldown::new(0.1),
         }
     }
 
-    pub fn update(&mut self, input: &GameInput, bullets: &mut Vec<Bullet>) {
+    pub fn update(&mut self, input: &GameInput, bullets: &mut Vec<Bullet>, delta: f32) {
+        self.shoot_cooldown.update(delta);
         self.update_pos(&input);
         self.fire_bullets(&input, bullets);
     }
@@ -58,25 +64,28 @@ impl Player {
         }
     }
 
-    fn fire_bullets(&self, input: &GameInput, bullets: &mut Vec<Bullet>) {
+    fn fire_bullets(&mut self, input: &GameInput, bullets: &mut Vec<Bullet>) {
         let mut direction = Vector2d { x: 0.0, y: 0.0 };
+        if self.shoot_cooldown.is_elapsed() {
+            self.shoot_cooldown.restart();
+            if input.shoot_right {
+                direction.x += 1.0;
+            }
+            if input.shoot_left {
+                direction.x -= 1.0;
+            }
+            if input.shoot_up {
+                direction.y += 1.0;
+            }
+            if input.shoot_down {
+                direction.y -= 1.0;
+            }
+            if direction.len() > 0.5 {
+                let bullet = Bullet::new(self.get_position(), direction);
+                bullets.push(bullet);
+            }
+        }
 
-        if input.shoot_right {
-            direction.x += 1.0;
-        }
-        if input.shoot_left {
-            direction.x -= 1.0;
-        }
-        if input.shoot_up {
-            direction.y += 1.0;
-        }
-        if input.shoot_down {
-            direction.y -= 1.0;
-        }
-        if direction.len() > 0.5 {
-            let bullet = Bullet::new(self.get_position(), direction);
-            bullets.push(bullet);
-        }
     }
 
     pub fn handle_collisions(&mut self, intersections: Option<Vec<Intersection>>) {
