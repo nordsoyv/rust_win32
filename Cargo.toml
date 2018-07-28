@@ -6,4 +6,4 @@ authors = ["Øyvind Nordsveen <oyvind.nordsveen@confirmit.com>"]
 [dependencies]
 winapi = {version = "0.3.5", features=["winuser", "libloaderapi","wincon","memoryapi"]}
 libc = "0.2.42"
-
+rand = "0.5.4"

@@ -44,7 +44,7 @@ impl Player {
     }
 
     fn update_pos(&mut self, input: &GameInput) {
-        let mut step_size: f32 = 1.0;
+        let mut step_size: f32 = 1.5;
         if input.space {
             step_size = 10.0;
         }

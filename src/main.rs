@@ -4,6 +4,8 @@
 extern crate libc;
 #[cfg(windows)]
 extern crate winapi;
+extern crate rand;
+
 // https://docs.rs/winapi/*/x86_64-pc-windows-msvc/winapi/um/libloaderapi/index.html?search=winuser
 
 use self::winapi::shared::minwindef::{LPARAM, LRESULT, UINT, WPARAM};

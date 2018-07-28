@@ -24,8 +24,8 @@ impl Bullet {
             height: 4.0,
             color: Color {
                 r: 1.0,
-                g: 0.1,
-                b: 0.1,
+                g: 0.7,
+                b: 0.7,
                 a: 1.0,
             },
             vel: direction.mul(VEL),
