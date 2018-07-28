@@ -115,10 +115,10 @@ impl GameState {
         let player = &self.player;
         let mut results = Vec::new();
         for mut other_e in &mut walls.iter() {
-            let intersection = self.check_intersection(player, other_e);
+            let intersection = check_intersection(player, other_e);
             match intersection {
                 Some(inter) => {
-                    println!("{:?}", inter);
+                    //println!("{:?}", inter);
                     results.push(inter)
                 }
                 None => {}
@@ -128,62 +128,6 @@ impl GameState {
             return Some(results);
         }
         return None;
-    }
-
-    fn check_intersection(&self, player: &Collider, other: &Collider) -> Option<Intersection> {
-        let player_bb = player.get_bounding_box();
-        let other_bb = other.get_bounding_box();
-        let left_side_intersection = player_bb.left - other_bb.right;
-        let right_side_intersection = other_bb.left - player_bb.right;
-        let top_side_intersection = other_bb.bottom - player_bb.top;
-        let bottom_side_intersection = player_bb.bottom - other_bb.top;
-
-        if left_side_intersection < 0.0
-            && right_side_intersection < 0.0
-            && top_side_intersection < 0.0
-            && bottom_side_intersection < 0.0
-        {
-            if left_side_intersection >= right_side_intersection
-                && left_side_intersection >= top_side_intersection
-                && left_side_intersection >= bottom_side_intersection
-            {
-                return Some(Intersection {
-                    hit_side: Side::Left,
-                    amount: left_side_intersection * -1.0,
-                });
-            }
-
-            if right_side_intersection >= left_side_intersection
-                && right_side_intersection >= top_side_intersection
-                && right_side_intersection >= bottom_side_intersection
-            {
-                return Some(Intersection {
-                    hit_side: Side::Right,
-                    amount: right_side_intersection * -1.0,
-                });
-            }
-
-            if top_side_intersection >= left_side_intersection
-                && top_side_intersection >= right_side_intersection
-                && top_side_intersection >= bottom_side_intersection
-            {
-                return Some(Intersection {
-                    hit_side: Side::Top,
-                    amount: top_side_intersection * -1.0,
-                });
-            }
-
-            if bottom_side_intersection >= left_side_intersection
-                && bottom_side_intersection >= top_side_intersection
-                && bottom_side_intersection >= right_side_intersection
-            {
-                return Some(Intersection {
-                    hit_side: Side::Bottom,
-                    amount: bottom_side_intersection * -1.0,
-                });
-            }
-        }
-        None
     }
 
     pub fn new(size_x: f32, size_y: f32) -> GameState {
@@ -214,4 +158,60 @@ impl GameState {
             world_size_y: size_y,
         }
     }
+}
+
+fn check_intersection(player: &Collider, other: &Collider) -> Option<Intersection> {
+    let player_bb = player.get_bounding_box();
+    let other_bb = other.get_bounding_box();
+    let left_side_intersection = player_bb.left - other_bb.right;
+    let right_side_intersection = other_bb.left - player_bb.right;
+    let top_side_intersection = other_bb.bottom - player_bb.top;
+    let bottom_side_intersection = player_bb.bottom - other_bb.top;
+
+    if left_side_intersection < 0.0
+        && right_side_intersection < 0.0
+        && top_side_intersection < 0.0
+        && bottom_side_intersection < 0.0
+    {
+        if left_side_intersection >= right_side_intersection
+            && left_side_intersection >= top_side_intersection
+            && left_side_intersection >= bottom_side_intersection
+        {
+            return Some(Intersection {
+                hit_side: Side::Left,
+                amount: left_side_intersection * -1.0,
+            });
+        }
+
+        if right_side_intersection >= left_side_intersection
+            && right_side_intersection >= top_side_intersection
+            && right_side_intersection >= bottom_side_intersection
+        {
+            return Some(Intersection {
+                hit_side: Side::Right,
+                amount: right_side_intersection * -1.0,
+            });
+        }
+
+        if top_side_intersection >= left_side_intersection
+            && top_side_intersection >= right_side_intersection
+            && top_side_intersection >= bottom_side_intersection
+        {
+            return Some(Intersection {
+                hit_side: Side::Top,
+                amount: top_side_intersection * -1.0,
+            });
+        }
+
+        if bottom_side_intersection >= left_side_intersection
+            && bottom_side_intersection >= top_side_intersection
+            && bottom_side_intersection >= right_side_intersection
+        {
+            return Some(Intersection {
+                hit_side: Side::Bottom,
+                amount: bottom_side_intersection * -1.0,
+            });
+        }
+    }
+    None
 }
