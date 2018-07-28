@@ -1,5 +1,6 @@
 pub mod bullet;
 pub mod cooldown;
+pub mod enemies;
 pub mod player;
 pub mod wall;
 

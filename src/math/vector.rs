@@ -27,6 +27,11 @@ impl Vector2d {
         self.y = self.y + other.y;
     }
 
+    pub fn sub(&mut self, other: &Vector2d) {
+        self.x = self.x - other.x;
+        self.y = self.y - other.y;
+    }
+
     pub fn mul(&self, m: f32) -> Vector2d {
         Vector2d::new(self.x * m, self.y * m)
     }

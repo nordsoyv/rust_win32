@@ -183,6 +183,9 @@ impl Renderer for SimpleRenderer {
         for e in &game_state.bullets {
             self.draw_obj(e);
         }
+        for e in &game_state.enemies {
+            self.draw_obj(e);
+        }
 
         unsafe {
             StretchDIBits(

@@ -1,4 +1,6 @@
 use entities::bullet::Bullet;
+use entities::enemies::Enemy;
+use entities::enemies::EnemyType;
 use entities::player::Player;
 use entities::wall::Wall;
 use entities::Collider;
@@ -16,6 +18,7 @@ pub struct GameState {
     pub player: Player,
     pub walls: Vec<Wall>,
     pub bullets: Vec<Bullet>,
+    pub enemies: Vec<Enemy>,
     pub world_size_x: f32,
     pub world_size_y: f32,
 }
@@ -81,12 +84,21 @@ pub fn game_loop(game_state: &mut GameState) -> bool {
 impl GameState {
     pub fn update(&mut self) {
         self.update_bullets();
+        self.update_enemies();
         self.player
             .update(&self.input, &mut self.bullets, self.time.delta);
 
-        let intersections = self.check_intersections();
+        let intersections = self.check_player_walls_intersections();
 
         self.player.handle_collisions(intersections);
+
+
+    }
+
+    fn update_enemies(&mut self) {
+        for e in &mut self.enemies {
+            e.update(&self.player, &self.time);
+        }
     }
 
     fn update_bullets(&mut self) -> () {
@@ -113,7 +125,7 @@ impl GameState {
         }
     }
 
-    fn check_intersections(&self) -> Option<Vec<Intersection>> {
+    fn check_player_walls_intersections(&self) -> Option<Vec<Intersection>> {
         let walls = &self.walls;
         let player = &self.player;
         let mut results = Vec::new();
@@ -150,6 +162,13 @@ impl GameState {
             4.0,
         ));
 
+        let mut enemies = Vec::new();
+
+        enemies.push(Enemy::new(
+            EnemyType::Normal,
+            Vector2d::new(100.0, 100.0),
+            Vector2d::new(0.0, 0.0),
+        ));
         GameState {
             input: GameInput::new(),
             frame: 0,
@@ -157,6 +176,7 @@ impl GameState {
             player,
             walls,
             bullets: Vec::new(),
+            enemies,
             world_size_x: size_x,
             world_size_y: size_y,
         }
