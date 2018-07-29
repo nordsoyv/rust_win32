@@ -9,6 +9,7 @@ use entities::Position;
 use entities::Side;
 use math::vector::Vector2d;
 use GameInput;
+use GameTime;
 
 pub struct Player {
     pos: Vector2d,
@@ -37,10 +38,10 @@ impl Player {
         }
     }
 
-    pub fn update(&mut self, input: &GameInput, bullets: &mut Vec<Bullet>, delta: f32) {
-        self.shoot_cooldown.update(delta);
+    pub fn update(&mut self, input: &GameInput, bullets: &mut Vec<Bullet>, time: &GameTime) {
+        self.shoot_cooldown.update(time.delta);
         self.update_pos(&input);
-        self.fire_bullets(&input, bullets);
+        self.fire_bullets(&input, bullets, time.time_elapsed);
     }
 
     fn update_pos(&mut self, input: &GameInput) {
@@ -62,7 +63,7 @@ impl Player {
         }
     }
 
-    fn fire_bullets(&mut self, input: &GameInput, bullets: &mut Vec<Bullet>) {
+    fn fire_bullets(&mut self, input: &GameInput, bullets: &mut Vec<Bullet>, birth_time: f32) {
         let mut direction = Vector2d { x: 0.0, y: 0.0 };
         if self.shoot_cooldown.is_elapsed() {
             self.shoot_cooldown.restart();

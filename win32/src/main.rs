@@ -1,10 +1,10 @@
 // Let's put this so that it won't open console
 //#![windows_subsystem = "windows"]
 
+extern crate game_core;
 extern crate libc;
 #[cfg(windows)]
 extern crate winapi;
-extern crate game_core;
 
 // https://docs.rs/winapi/*/x86_64-pc-windows-msvc/winapi/um/libloaderapi/index.html?search=winuser
 

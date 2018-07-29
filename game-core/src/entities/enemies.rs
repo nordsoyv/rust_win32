@@ -4,6 +4,7 @@ use entities::Collider;
 use entities::Color;
 use entities::Drawable;
 use entities::Position;
+use math::pulse_value;
 use math::vector::Vector2d;
 use GameTime;
 
@@ -18,6 +19,7 @@ pub struct Enemy {
     width: f32,
     height: f32,
     color: Color,
+    life_time: f32,
 }
 
 impl Enemy {
@@ -26,8 +28,9 @@ impl Enemy {
             enemy_type,
             pos,
             vel,
-            width: 5.0,
-            height: 5.0,
+            life_time: 0.0,
+            width: 10.0,
+            height: 10.0,
             color: Color {
                 r: 0.1,
                 g: 1.0,
@@ -37,7 +40,8 @@ impl Enemy {
         }
     }
 
-    pub fn update(&mut self, player: &Player, _time: &GameTime) {
+    pub fn update(&mut self, player: &Player, time: &GameTime) {
+        self.life_time += time.delta;
         match self.enemy_type {
             EnemyType::Normal => {
                 let player_pos = player.get_position();
@@ -46,6 +50,8 @@ impl Enemy {
                 current_pos.normalize();
                 current_pos = current_pos.mul(-1.0);
                 self.pos.add(&current_pos);
+                self.width = 10.0 + pulse_value(0.0, 5.0, self.life_time * 10.0);
+                self.height = 10.0 + pulse_value(0.0, 5.0, self.life_time * 7.5);
             }
             _ => {}
         }

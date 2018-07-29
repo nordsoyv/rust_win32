@@ -4,15 +4,15 @@ pub mod entities;
 mod math;
 
 use entities::bullet::Bullet;
-use entities::Collider;
 use entities::cooldown::Cooldown;
 use entities::enemies::Enemy;
 use entities::enemies::EnemyType;
-use entities::Intersection;
 use entities::player::Player;
+use entities::wall::Wall;
+use entities::Collider;
+use entities::Intersection;
 use entities::Position;
 use entities::Side;
-use entities::wall::Wall;
 use math::vector::Vector2d;
 use rand::prelude::*;
 use std::time::Duration;
@@ -95,7 +95,7 @@ impl GameState {
         self.update_bullets();
         self.update_enemies();
         self.player
-            .update(&self.input, &mut self.bullets, self.time.delta);
+            .update(&self.input, &mut self.bullets, &self.time);
 
         let intersections = self.check_player_walls_intersections();
         self.player.handle_collisions(intersections);
@@ -125,12 +125,12 @@ impl GameState {
             rand_pos.sub(&self.player.get_position());
         }
 
-
-        self.enemies.push(Enemy::new(EnemyType::Normal,
-                                     Vector2d::new(x as f32, y as f32),
-                                     Vector2d::new(0.0, 0.0), ));
+        self.enemies.push(Enemy::new(
+            EnemyType::Normal,
+            Vector2d::new(x as f32, y as f32),
+            Vector2d::new(0.0, 0.0),
+        ));
     }
-
 
     fn update_enemies(&mut self) {
         for e in &mut self.enemies {
@@ -148,9 +148,9 @@ impl GameState {
             let pos = b.get_position();
 
             if pos.x < 0.0 || pos.x > self.world_size_x || pos.y < 0.0 || pos.y > self.world_size_y
-                {
-                    bullets_to_delete.push(index);
-                }
+            {
+                bullets_to_delete.push(index);
+            }
             index += 1;
         }
 
@@ -184,7 +184,9 @@ impl GameState {
 
     fn check_bullets_enemies_intersections(&mut self) {
         let mut enemy_index: usize = 0;
+        let mut bullets_index: usize = 0;
         let mut enemies_to_kill = Vec::new();
+        let mut bullets_to_kill = Vec::new();
         for b in &self.bullets {
             enemy_index = 0;
             for e in &self.enemies {
@@ -192,16 +194,24 @@ impl GameState {
                 match intersection {
                     Some(_) => {
                         enemies_to_kill.push(enemy_index);
+                        bullets_to_kill.push(bullets_index);
                     }
                     None => {}
                 }
                 enemy_index += 1;
             }
+            bullets_index += 1;
         }
         if enemies_to_kill.len() > 0 {
             enemies_to_kill.reverse();
             for index_to_delete in enemies_to_kill {
                 self.enemies.remove(index_to_delete);
+            }
+        }
+        if bullets_to_kill.len() > 0 {
+            bullets_to_kill.reverse();
+            for index_to_delete in bullets_to_kill {
+                self.bullets.remove(index_to_delete);
             }
         }
     }
@@ -257,46 +267,46 @@ fn check_intersection(player: &Collider, other: &Collider) -> Option<Intersectio
         && right_side_intersection < 0.0
         && top_side_intersection < 0.0
         && bottom_side_intersection < 0.0
+    {
+        if left_side_intersection >= right_side_intersection
+            && left_side_intersection >= top_side_intersection
+            && left_side_intersection >= bottom_side_intersection
         {
-            if left_side_intersection >= right_side_intersection
-                && left_side_intersection >= top_side_intersection
-                && left_side_intersection >= bottom_side_intersection
-                {
-                    return Some(Intersection {
-                        hit_side: Side::Left,
-                        amount: left_side_intersection * -1.0,
-                    });
-                }
-
-            if right_side_intersection >= left_side_intersection
-                && right_side_intersection >= top_side_intersection
-                && right_side_intersection >= bottom_side_intersection
-                {
-                    return Some(Intersection {
-                        hit_side: Side::Right,
-                        amount: right_side_intersection * -1.0,
-                    });
-                }
-
-            if top_side_intersection >= left_side_intersection
-                && top_side_intersection >= right_side_intersection
-                && top_side_intersection >= bottom_side_intersection
-                {
-                    return Some(Intersection {
-                        hit_side: Side::Top,
-                        amount: top_side_intersection * -1.0,
-                    });
-                }
-
-            if bottom_side_intersection >= left_side_intersection
-                && bottom_side_intersection >= top_side_intersection
-                && bottom_side_intersection >= right_side_intersection
-                {
-                    return Some(Intersection {
-                        hit_side: Side::Bottom,
-                        amount: bottom_side_intersection * -1.0,
-                    });
-                }
+            return Some(Intersection {
+                hit_side: Side::Left,
+                amount: left_side_intersection * -1.0,
+            });
         }
+
+        if right_side_intersection >= left_side_intersection
+            && right_side_intersection >= top_side_intersection
+            && right_side_intersection >= bottom_side_intersection
+        {
+            return Some(Intersection {
+                hit_side: Side::Right,
+                amount: right_side_intersection * -1.0,
+            });
+        }
+
+        if top_side_intersection >= left_side_intersection
+            && top_side_intersection >= right_side_intersection
+            && top_side_intersection >= bottom_side_intersection
+        {
+            return Some(Intersection {
+                hit_side: Side::Top,
+                amount: top_side_intersection * -1.0,
+            });
+        }
+
+        if bottom_side_intersection >= left_side_intersection
+            && bottom_side_intersection >= top_side_intersection
+            && bottom_side_intersection >= right_side_intersection
+        {
+            return Some(Intersection {
+                hit_side: Side::Bottom,
+                amount: bottom_side_intersection * -1.0,
+            });
+        }
+    }
     None
 }
