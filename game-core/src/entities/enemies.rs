@@ -15,7 +15,6 @@ pub enum EnemyType {
 pub struct Enemy {
     enemy_type: EnemyType,
     pos: Vector2d,
-    vel: Vector2d,
     width: f32,
     height: f32,
     color: Color,
@@ -23,11 +22,10 @@ pub struct Enemy {
 }
 
 impl Enemy {
-    pub fn new(enemy_type: EnemyType, pos: Vector2d, vel: Vector2d) -> Enemy {
+    pub fn new(enemy_type: EnemyType, pos: Vector2d) -> Enemy {
         Enemy {
             enemy_type,
             pos,
-            vel,
             life_time: 0.0,
             width: 10.0,
             height: 10.0,
@@ -53,7 +51,6 @@ impl Enemy {
                 self.width = 10.0 + pulse_value(0.0, 5.0, self.life_time * 10.0);
                 self.height = 10.0 + pulse_value(0.0, 5.0, self.life_time * 7.5);
             }
-            _ => {}
         }
     }
 }

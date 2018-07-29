@@ -41,7 +41,7 @@ impl Player {
     pub fn update(&mut self, input: &GameInput, bullets: &mut Vec<Bullet>, time: &GameTime) {
         self.shoot_cooldown.update(time.delta);
         self.update_pos(&input);
-        self.fire_bullets(&input, bullets, time.time_elapsed);
+        self.fire_bullets(&input, bullets);
     }
 
     fn update_pos(&mut self, input: &GameInput) {
@@ -63,7 +63,7 @@ impl Player {
         }
     }
 
-    fn fire_bullets(&mut self, input: &GameInput, bullets: &mut Vec<Bullet>, birth_time: f32) {
+    fn fire_bullets(&mut self, input: &GameInput, bullets: &mut Vec<Bullet>) {
         let mut direction = Vector2d { x: 0.0, y: 0.0 };
         if self.shoot_cooldown.is_elapsed() {
             self.shoot_cooldown.restart();

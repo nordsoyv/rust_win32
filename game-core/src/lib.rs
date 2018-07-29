@@ -128,7 +128,6 @@ impl GameState {
         self.enemies.push(Enemy::new(
             EnemyType::Normal,
             Vector2d::new(x as f32, y as f32),
-            Vector2d::new(0.0, 0.0),
         ));
     }
 
@@ -183,7 +182,7 @@ impl GameState {
     }
 
     fn check_bullets_enemies_intersections(&mut self) {
-        let mut enemy_index: usize = 0;
+        let mut enemy_index: usize;
         let mut bullets_index: usize = 0;
         let mut enemies_to_kill = Vec::new();
         let mut bullets_to_kill = Vec::new();
@@ -203,12 +202,14 @@ impl GameState {
             bullets_index += 1;
         }
         if enemies_to_kill.len() > 0 {
+            enemies_to_kill.dedup();
             enemies_to_kill.reverse();
             for index_to_delete in enemies_to_kill {
                 self.enemies.remove(index_to_delete);
             }
         }
         if bullets_to_kill.len() > 0 {
+            bullets_to_kill.dedup();
             bullets_to_kill.reverse();
             for index_to_delete in bullets_to_kill {
                 self.bullets.remove(index_to_delete);
@@ -238,7 +239,6 @@ impl GameState {
         enemies.push(Enemy::new(
             EnemyType::Normal,
             Vector2d::new(100.0, 100.0),
-            Vector2d::new(0.0, 0.0),
         ));
         GameState {
             input: GameInput::new(),
