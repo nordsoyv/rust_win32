@@ -4,7 +4,7 @@
 extern crate libc;
 #[cfg(windows)]
 extern crate winapi;
-extern crate rand;
+extern crate game_core;
 
 // https://docs.rs/winapi/*/x86_64-pc-windows-msvc/winapi/um/libloaderapi/index.html?search=winuser
 
@@ -33,8 +33,8 @@ use self::winapi::um::winuser::{
     WS_OVERLAPPEDWINDOW,
     WS_VISIBLE,
 };
-use game::game_loop;
-use game::GameState;
+use game_core::game_loop;
+use game_core::GameState;
 use renderer::Renderer;
 use std::ffi::OsStr;
 use std::io::Error;
@@ -45,9 +45,6 @@ use std::ptr::null_mut;
 use std::time::Duration;
 use std::time::Instant;
 
-mod entities;
-mod game;
-mod math;
 mod renderer;
 
 // We have to encode text to wide format for Windows

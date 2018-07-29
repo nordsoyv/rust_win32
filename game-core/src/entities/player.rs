@@ -7,8 +7,8 @@ use entities::Drawable;
 use entities::Intersection;
 use entities::Position;
 use entities::Side;
-use game::GameInput;
 use math::vector::Vector2d;
+use GameInput;
 
 pub struct Player {
     pos: Vector2d,

@@ -1,6 +1,6 @@
 mod simplerenderer;
 
-use game::GameState;
+use game_core::GameState;
 use renderer::simplerenderer::SimpleRenderer;
 
 use winapi::shared::windef::HWND;

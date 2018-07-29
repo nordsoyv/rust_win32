@@ -1,6 +1,6 @@
-use entities::Color;
-use entities::Drawable;
-use game::GameState;
+use game_core::entities::Color;
+use game_core::entities::Drawable;
+use game_core::GameState;
 use libc;
 use renderer::Renderer;
 use std;

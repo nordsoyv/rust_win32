@@ -3,8 +3,8 @@ use entities::Collider;
 use entities::Color;
 use entities::Drawable;
 use entities::Position;
-use game::GameTime;
 use math::vector::Vector2d;
+use GameTime;
 
 pub struct Bullet {
     pos: Vector2d,

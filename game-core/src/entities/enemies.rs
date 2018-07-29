@@ -4,8 +4,8 @@ use entities::Collider;
 use entities::Color;
 use entities::Drawable;
 use entities::Position;
-use game::GameTime;
 use math::vector::Vector2d;
+use GameTime;
 
 pub enum EnemyType {
     Normal,
@@ -37,7 +37,7 @@ impl Enemy {
         }
     }
 
-    pub fn update(&mut self, player: &Player, time: &GameTime) {
+    pub fn update(&mut self, player: &Player, _time: &GameTime) {
         match self.enemy_type {
             EnemyType::Normal => {
                 let player_pos = player.get_position();

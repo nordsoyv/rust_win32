@@ -1,3 +1,8 @@
+extern crate rand;
+
+pub mod entities;
+mod math;
+
 use entities::bullet::Bullet;
 use entities::Collider;
 use entities::cooldown::Cooldown;
@@ -10,8 +15,6 @@ use entities::Side;
 use entities::wall::Wall;
 use math::vector::Vector2d;
 use rand::prelude::*;
-use rand::random;
-use rand::thread_rng;
 use std::time::Duration;
 use std::time::Instant;
 
@@ -192,6 +195,7 @@ impl GameState {
                     }
                     None => {}
                 }
+                enemy_index += 1;
             }
         }
         if enemies_to_kill.len() > 0 {

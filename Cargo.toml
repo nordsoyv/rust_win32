@@ -1,11 +1,5 @@
 [workspace]
 members = [
-    "win32"
+    "win32",
+    "game-core"
 ]
-
-[package]
-name = "simple"
-version = "0.1.0"
-authors = ["Øyvind Nordsveen <oyvind.nordsveen@confirmit.com>"]
-
-[dependencies]
