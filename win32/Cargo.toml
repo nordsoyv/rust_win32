@@ -1,0 +1,9 @@
+[package]
+name = "win32"
+version = "0.1.0"
+authors = ["Øyvind <oyvind.nordsveen@gmail.com>"]
+
+[dependencies]
+winapi = {version = "0.3.5", features=["winuser", "libloaderapi","wincon","memoryapi"]}
+libc = "0.2.42"
+rand = "0.5.4"
