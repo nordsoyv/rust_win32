@@ -54,7 +54,12 @@ impl Collider for Wall {
 }
 
 impl Drawable for Wall {
-    fn get_color(&self) -> &Color {
-        &self.color
+    fn get_color(&self) -> Color {
+        Color {
+            r: self.color.r,
+            g: self.color.g,
+            b: self.color.b,
+            a: self.color.a,
+        }
     }
 }

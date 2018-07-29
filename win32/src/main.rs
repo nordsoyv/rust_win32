@@ -8,6 +8,9 @@ extern crate winapi;
 
 // https://docs.rs/winapi/*/x86_64-pc-windows-msvc/winapi/um/libloaderapi/index.html?search=winuser
 
+use game_core::game_loop;
+use game_core::GameState;
+use renderer::Renderer;
 use self::winapi::shared::minwindef::{LPARAM, LRESULT, UINT, WPARAM};
 use self::winapi::shared::windef::HWND;
 use self::winapi::um::libloaderapi::GetModuleHandleW;
@@ -33,9 +36,6 @@ use self::winapi::um::winuser::{
     WS_OVERLAPPEDWINDOW,
     WS_VISIBLE,
 };
-use game_core::game_loop;
-use game_core::GameState;
-use renderer::Renderer;
 use std::ffi::OsStr;
 use std::io::Error;
 use std::iter::once;
@@ -190,12 +190,20 @@ fn get_input(game_state: &mut GameState) {
     }
 }
 
+static mut START_TIME: Option<Instant> = None;
+static mut LAST_FRAME_START: Option<Instant> = None;
+
+
 #[cfg(windows)]
 fn main() {
     hide_console_window();
 
     let mut window = create_window("my_window", "Portfolio manager pro").unwrap();
     let mut game_state = GameState::new(960.0, 540.0);
+    unsafe {
+        START_TIME = Some(Instant::now());
+        LAST_FRAME_START = Some(Instant::now());
+    }
     let mut renderer = renderer::create_simple_renderer(window.handle, 960, 540);
     loop {
         if main_loop(&mut window, &mut game_state, &mut renderer) {
@@ -204,42 +212,45 @@ fn main() {
     }
 }
 
+
 fn main_loop(window: &mut Window, game_state: &mut GameState, renderer: &mut Renderer) -> bool {
     if handle_messages(window) {
         return true;
     }
+    unsafe {
+        let last_frame_time = LAST_FRAME_START.unwrap().elapsed();
+        LAST_FRAME_START = Some(Instant::now());
 
-    game_state.frame += 1;
-    game_state.time.last_frame_time = game_state.time.frame_start_time.elapsed();
-    game_state.time.frame_start_time = Instant::now();
+        let delta = last_frame_time.subsec_micros() as f32;
+        game_state.time.delta = delta / (1000.0 * 1000.0);
 
-    let delta = game_state.time.last_frame_time.subsec_micros() as f32;
-    game_state.time.delta = delta / (1000.0 * 1000.0);
+        let total_time = START_TIME.unwrap().elapsed();
+        game_state.time.time_elapsed = total_time.as_secs() as f32;
+        game_state.time.time_elapsed += total_time.subsec_micros() as f32 / (1000.0 * 1000.0);
 
-    let total_time = game_state.time.game_start_time.elapsed();
-    game_state.time.time_elapsed = total_time.as_secs() as f32;
-    game_state.time.time_elapsed += total_time.subsec_micros() as f32 / (1000.0 * 1000.0);
-    get_input(game_state);
+        get_input(game_state);
 
-    let continue_running = game_loop(game_state);
-    if !continue_running {
-        return true;
+        let game_output = game_loop(game_state);
+
+
+        if game_output.len() == 0 {
+            return true;
+        }
+
+        renderer.render_frame(game_output);
+        let frame_time = LAST_FRAME_START.unwrap().elapsed();
+//        println!("Frame time {:?}", frame_time.subsec_millis());
+
+        if frame_time < Duration::from_millis(15) {
+            let sleep_time = Duration::from_millis((15 - frame_time.subsec_millis()).into());
+            std::thread::sleep(sleep_time);
+        } else {
+            println!(
+                "Missed frame timing. Last frame took {:?} milliseconds",
+                frame_time.subsec_millis()
+            )
+        }
+
+        return false;
     }
-
-    renderer.render_frame(game_state);
-    let frame_time = game_state.time.frame_start_time.elapsed();
-    //println!("Frame time {:?}", frame_time.subsec_millis());
-
-    if frame_time < Duration::from_millis(15) {
-        let sleep_time = Duration::from_millis((15 - frame_time.subsec_millis()).into());
-
-        std::thread::sleep(sleep_time);
-    } else {
-        println!(
-            "Missed frame timing. Last frame took {:?} milliseconds",
-            frame_time.subsec_millis()
-        )
-    }
-
-    return false;
 }

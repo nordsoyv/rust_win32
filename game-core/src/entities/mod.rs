@@ -1,10 +1,10 @@
+use math::vector::Vector2d;
+
 pub mod bullet;
 pub mod cooldown;
 pub mod enemies;
 pub mod player;
 pub mod wall;
-
-use math::vector::Vector2d;
 
 #[derive(Debug)]
 pub struct Color {
@@ -25,7 +25,7 @@ pub trait Collider: Position {
 }
 
 pub trait Drawable: Collider {
-    fn get_color(&self) -> &Color;
+    fn get_color(&self) -> Color;
 }
 
 pub struct BoundingBox {

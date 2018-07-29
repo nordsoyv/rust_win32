@@ -3,9 +3,9 @@ use entities::Collider;
 use entities::Color;
 use entities::Drawable;
 use entities::Position;
+use GameTime;
 use math::pulse_value;
 use math::vector::Vector2d;
-use GameTime;
 
 pub struct Bullet {
     pos: Vector2d,
@@ -69,7 +69,12 @@ impl Collider for Bullet {
 }
 
 impl Drawable for Bullet {
-    fn get_color(&self) -> &Color {
-        &self.color
+    fn get_color(&self) -> Color {
+        Color {
+            r: self.color.r,
+            g: self.color.g,
+            b: self.color.b,
+            a: self.color.a,
+        }
     }
 }

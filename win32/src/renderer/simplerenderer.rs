@@ -1,6 +1,5 @@
 use game_core::entities::Color;
-use game_core::entities::Drawable;
-use game_core::GameState;
+use game_core::Renderable;
 use libc;
 use renderer::Renderer;
 use std;
@@ -9,7 +8,7 @@ use winapi::shared::minwindef::LPVOID;
 use winapi::shared::windef::{HDC, HWND, LPRECT, RECT};
 use winapi::um::memoryapi::{VirtualAlloc, VirtualFree};
 use winapi::um::wingdi::{
-    StretchDIBits, BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS, RGBQUAD, SRCCOPY,
+    BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS, RGBQUAD, SRCCOPY, StretchDIBits,
 };
 use winapi::um::winnt::{MEM_COMMIT, MEM_RELEASE, PAGE_READWRITE};
 use winapi::um::winuser::{GetClientRect, GetDC};
@@ -89,18 +88,19 @@ pub fn create_simple_renderer(
 }
 
 impl SimpleRenderer {
-    fn draw_obj(&self, obj: &Drawable) {
-        let rect = obj.get_bounding_box();
+    fn draw_obj(&self, obj: Renderable) {
+        let rect = obj.rect;
         self.draw_rectangle(
             rect.left,
             rect.bottom,
             rect.right,
             rect.top,
-            obj.get_color(),
+            obj.color
+            ,
         )
     }
 
-    fn draw_rectangle(&self, min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: &Color) {
+    fn draw_rectangle(&self, min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: Color) {
         let mut start_x = min_x as i32;
         if start_x < 0 {
             start_x = 0;
@@ -174,16 +174,10 @@ impl SimpleRenderer {
 }
 
 impl Renderer for SimpleRenderer {
-    fn render_frame(&mut self, game_state: &mut GameState) {
+    fn render_frame(&mut self, game_state: Vec<Renderable>) {
         self.clear_screen();
-        self.draw_obj(&game_state.player);
-        for e in &game_state.walls {
-            self.draw_obj(e);
-        }
-        for e in &game_state.bullets {
-            self.draw_obj(e);
-        }
-        for e in &game_state.enemies {
+
+        for e in game_state {
             self.draw_obj(e);
         }
 

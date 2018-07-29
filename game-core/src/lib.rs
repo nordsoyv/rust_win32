@@ -1,34 +1,35 @@
 extern crate rand;
 
+use entities::BoundingBox;
+use entities::bullet::Bullet;
+use entities::Collider;
+use entities::Color;
+use entities::cooldown::Cooldown;
+use entities::Drawable;
+use entities::enemies::Enemy;
+use entities::enemies::EnemyType;
+use entities::Intersection;
+use entities::player::Player;
+use entities::Position;
+use entities::Side;
+use entities::wall::Wall;
+use math::vector::Vector2d;
+use rand::prelude::*;
+
 pub mod entities;
 mod math;
 
-use entities::bullet::Bullet;
-use entities::cooldown::Cooldown;
-use entities::enemies::Enemy;
-use entities::enemies::EnemyType;
-use entities::player::Player;
-use entities::wall::Wall;
-use entities::Collider;
-use entities::Intersection;
-use entities::Position;
-use entities::Side;
-use math::vector::Vector2d;
-use rand::prelude::*;
-use std::time::Duration;
-use std::time::Instant;
-
 pub struct GameState {
-    pub frame: u32,
+    frame: u32,
     pub input: GameInput,
     pub time: GameTime,
-    pub player: Player,
-    pub walls: Vec<Wall>,
-    pub bullets: Vec<Bullet>,
-    pub enemies: Vec<Enemy>,
+    player: Player,
+    walls: Vec<Wall>,
+    bullets: Vec<Bullet>,
+    enemies: Vec<Enemy>,
     enemy_spawn: Cooldown,
-    pub world_size_x: f32,
-    pub world_size_y: f32,
+    world_size_x: f32,
+    world_size_y: f32,
 }
 
 pub struct GameInput {
@@ -62,9 +63,6 @@ impl GameInput {
 }
 
 pub struct GameTime {
-    pub game_start_time: Instant,
-    pub frame_start_time: Instant,
-    pub last_frame_time: Duration,
     pub time_elapsed: f32,
     pub delta: f32,
 }
@@ -72,25 +70,29 @@ pub struct GameTime {
 impl GameTime {
     fn new() -> GameTime {
         GameTime {
-            game_start_time: Instant::now(),
-            frame_start_time: Instant::now(),
-            last_frame_time: Duration::new(0, 0),
             time_elapsed: 0.0,
             delta: 0.0,
         }
     }
 }
 
-pub fn game_loop(game_state: &mut GameState) -> bool {
+pub fn game_loop(game_state: &mut GameState) -> Vec<Renderable> {
+    game_state.frame += 1;
+
     if game_state.input.quit_key {
-        return false;
+        return Vec::new();
     }
-    game_state.update();
-    return true;
+    game_state.update()
+}
+
+pub struct Renderable {
+    pub rect: BoundingBox,
+    pub color: Color,
+
 }
 
 impl GameState {
-    pub fn update(&mut self) {
+    pub fn update(&mut self) -> Vec<Renderable> {
         self.update_enemy_spawn();
         self.update_bullets();
         self.update_enemies();
@@ -101,6 +103,34 @@ impl GameState {
         self.player.handle_collisions(intersections);
 
         self.check_bullets_enemies_intersections();
+
+        let mut drawables: Vec<Renderable> = Vec::new();
+        for b in &self.bullets {
+            drawables.push(Renderable {
+                rect: b.get_bounding_box(),
+                color: b.get_color(),
+            });
+        }
+
+        drawables.push(Renderable {
+            rect: self.player.get_bounding_box(),
+            color: self.player.get_color(),
+        });
+        for e in &self.enemies {
+            drawables.push(Renderable {
+                rect: e.get_bounding_box(),
+                color: e.get_color(),
+            });
+        }
+        for w in &self.walls {
+            drawables.push(Renderable {
+                rect: w.get_bounding_box(),
+                color: w.get_color(),
+            });
+        }
+
+
+        drawables
     }
 
     fn update_enemy_spawn(&mut self) {
@@ -147,9 +177,9 @@ impl GameState {
             let pos = b.get_position();
 
             if pos.x < 0.0 || pos.x > self.world_size_x || pos.y < 0.0 || pos.y > self.world_size_y
-            {
-                bullets_to_delete.push(index);
-            }
+                {
+                    bullets_to_delete.push(index);
+                }
             index += 1;
         }
 
@@ -267,46 +297,46 @@ fn check_intersection(player: &Collider, other: &Collider) -> Option<Intersectio
         && right_side_intersection < 0.0
         && top_side_intersection < 0.0
         && bottom_side_intersection < 0.0
-    {
-        if left_side_intersection >= right_side_intersection
-            && left_side_intersection >= top_side_intersection
-            && left_side_intersection >= bottom_side_intersection
         {
-            return Some(Intersection {
-                hit_side: Side::Left,
-                amount: left_side_intersection * -1.0,
-            });
-        }
+            if left_side_intersection >= right_side_intersection
+                && left_side_intersection >= top_side_intersection
+                && left_side_intersection >= bottom_side_intersection
+                {
+                    return Some(Intersection {
+                        hit_side: Side::Left,
+                        amount: left_side_intersection * -1.0,
+                    });
+                }
 
-        if right_side_intersection >= left_side_intersection
-            && right_side_intersection >= top_side_intersection
-            && right_side_intersection >= bottom_side_intersection
-        {
-            return Some(Intersection {
-                hit_side: Side::Right,
-                amount: right_side_intersection * -1.0,
-            });
-        }
+            if right_side_intersection >= left_side_intersection
+                && right_side_intersection >= top_side_intersection
+                && right_side_intersection >= bottom_side_intersection
+                {
+                    return Some(Intersection {
+                        hit_side: Side::Right,
+                        amount: right_side_intersection * -1.0,
+                    });
+                }
 
-        if top_side_intersection >= left_side_intersection
-            && top_side_intersection >= right_side_intersection
-            && top_side_intersection >= bottom_side_intersection
-        {
-            return Some(Intersection {
-                hit_side: Side::Top,
-                amount: top_side_intersection * -1.0,
-            });
-        }
+            if top_side_intersection >= left_side_intersection
+                && top_side_intersection >= right_side_intersection
+                && top_side_intersection >= bottom_side_intersection
+                {
+                    return Some(Intersection {
+                        hit_side: Side::Top,
+                        amount: top_side_intersection * -1.0,
+                    });
+                }
 
-        if bottom_side_intersection >= left_side_intersection
-            && bottom_side_intersection >= top_side_intersection
-            && bottom_side_intersection >= right_side_intersection
-        {
-            return Some(Intersection {
-                hit_side: Side::Bottom,
-                amount: bottom_side_intersection * -1.0,
-            });
+            if bottom_side_intersection >= left_side_intersection
+                && bottom_side_intersection >= top_side_intersection
+                && bottom_side_intersection >= right_side_intersection
+                {
+                    return Some(Intersection {
+                        hit_side: Side::Bottom,
+                        amount: bottom_side_intersection * -1.0,
+                    });
+                }
         }
-    }
     None
 }

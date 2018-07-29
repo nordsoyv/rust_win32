@@ -1,15 +1,15 @@
-use entities::bullet::Bullet;
-use entities::cooldown::Cooldown;
 use entities::BoundingBox;
+use entities::bullet::Bullet;
 use entities::Collider;
 use entities::Color;
+use entities::cooldown::Cooldown;
 use entities::Drawable;
 use entities::Intersection;
 use entities::Position;
 use entities::Side;
-use math::vector::Vector2d;
 use GameInput;
 use GameTime;
+use math::vector::Vector2d;
 
 pub struct Player {
     pos: Vector2d,
@@ -139,7 +139,12 @@ impl Collider for Player {
 }
 
 impl Drawable for Player {
-    fn get_color(&self) -> &Color {
-        &self.color
+    fn get_color(&self) -> Color {
+        Color {
+            r: self.color.r,
+            g: self.color.g,
+            b: self.color.b,
+            a: self.color.a,
+        }
     }
 }
