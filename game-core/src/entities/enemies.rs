@@ -4,7 +4,6 @@ use entities::Color;
 use entities::Drawable;
 use entities::player::Player;
 use entities::Position;
-use GameTime;
 use math::pulse_value;
 use math::vector::Vector2d;
 
@@ -38,8 +37,8 @@ impl Enemy {
         }
     }
 
-    pub fn update(&mut self, player: &Player, time: &GameTime) {
-        self.life_time += time.delta;
+    pub fn update(&mut self, player: &Player, delta: f32) {
+        self.life_time += delta;
         match self.enemy_type {
             EnemyType::Normal => {
                 let player_pos = player.get_position();

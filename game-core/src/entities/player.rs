@@ -8,7 +8,6 @@ use entities::Intersection;
 use entities::Position;
 use entities::Side;
 use GameInput;
-use GameTime;
 use math::vector::Vector2d;
 
 pub struct Player {
@@ -38,8 +37,8 @@ impl Player {
         }
     }
 
-    pub fn update(&mut self, input: &GameInput, bullets: &mut Vec<Bullet>, time: &GameTime) {
-        self.shoot_cooldown.update(time.delta);
+    pub fn update(&mut self, input: &GameInput, bullets: &mut Vec<Bullet>, delta: f32) {
+        self.shoot_cooldown.update(delta);
         self.update_pos(&input);
         self.fire_bullets(&input, bullets);
     }

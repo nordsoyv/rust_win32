@@ -3,7 +3,6 @@ use entities::Collider;
 use entities::Color;
 use entities::Drawable;
 use entities::Position;
-use GameTime;
 use math::pulse_value;
 use math::vector::Vector2d;
 
@@ -35,10 +34,10 @@ impl Bullet {
         }
     }
 
-    pub fn update(&mut self, time: &GameTime) {
-        self.life_time += time.delta;
-        self.pos.x += self.vel.x * time.delta;
-        self.pos.y += self.vel.y * time.delta;
+    pub fn update(&mut self, delta: f32) {
+        self.life_time +=delta;
+        self.pos.x += self.vel.x * delta;
+        self.pos.y += self.vel.y * delta;
         self.color.r = pulse_value(0.7, 1.0, self.life_time * 5.0);
     }
 }

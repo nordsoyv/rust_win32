@@ -19,17 +19,9 @@ use rand::prelude::*;
 pub mod entities;
 mod math;
 
-pub struct GameState {
-    frame: u32,
-    pub input: GameInput,
-    pub time: GameTime,
-    player: Player,
-    walls: Vec<Wall>,
-    bullets: Vec<Bullet>,
-    enemies: Vec<Enemy>,
-    enemy_spawn: Cooldown,
-    world_size_x: f32,
-    world_size_y: f32,
+pub struct Renderable {
+    pub rect: BoundingBox,
+    pub color: Color,
 }
 
 pub struct GameInput {
@@ -45,8 +37,37 @@ pub struct GameInput {
     pub space: bool,
 }
 
+static mut GAME_STATE: Option<GameState> = None;
+
+pub fn game_init(size_x: f32, size_y: f32) {
+    unsafe {
+        GAME_STATE = Some(GameState::new(size_x, size_y))
+    }
+}
+
+pub fn game_loop(input: GameInput, time_elapsed: f32, delta: f32) -> Vec<Renderable> {
+
+    unsafe {
+        assert!(GAME_STATE.is_some());
+        match GAME_STATE {
+            Some(ref mut gs) => {
+                gs.frame += 1;
+                gs.time.delta = delta;
+                gs.time.time_elapsed = time_elapsed;
+                if input.quit_key {
+                    return Vec::new();
+                }
+                gs.input = input;
+                return gs.update();
+            }
+            None => {return Vec::new(); }
+        }
+
+    }
+}
+
 impl GameInput {
-    fn new() -> GameInput {
+    pub fn new() -> GameInput {
         GameInput {
             down_key: false,
             left_key: false,
@@ -62,7 +83,20 @@ impl GameInput {
     }
 }
 
-pub struct GameTime {
+struct GameState {
+    frame: u32,
+    pub input: GameInput,
+    pub time: GameTime,
+    player: Player,
+    walls: Vec<Wall>,
+    bullets: Vec<Bullet>,
+    enemies: Vec<Enemy>,
+    enemy_spawn: Cooldown,
+    world_size_x: f32,
+    world_size_y: f32,
+}
+
+struct GameTime {
     pub time_elapsed: f32,
     pub delta: f32,
 }
@@ -76,20 +110,6 @@ impl GameTime {
     }
 }
 
-pub fn game_loop(game_state: &mut GameState) -> Vec<Renderable> {
-    game_state.frame += 1;
-
-    if game_state.input.quit_key {
-        return Vec::new();
-    }
-    game_state.update()
-}
-
-pub struct Renderable {
-    pub rect: BoundingBox,
-    pub color: Color,
-
-}
 
 impl GameState {
     pub fn update(&mut self) -> Vec<Renderable> {
@@ -97,7 +117,7 @@ impl GameState {
         self.update_bullets();
         self.update_enemies();
         self.player
-            .update(&self.input, &mut self.bullets, &self.time);
+            .update(&self.input, &mut self.bullets, self.time.delta);
 
         let intersections = self.check_player_walls_intersections();
         self.player.handle_collisions(intersections);
@@ -163,7 +183,7 @@ impl GameState {
 
     fn update_enemies(&mut self) {
         for e in &mut self.enemies {
-            e.update(&self.player, &self.time);
+            e.update(&self.player, self.time.delta);
         }
     }
 
@@ -172,7 +192,7 @@ impl GameState {
         let mut index: usize = 0;
 
         for b in &mut self.bullets {
-            b.update(&self.time);
+            b.update(self.time.delta);
 
             let pos = b.get_position();
 

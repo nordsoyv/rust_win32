@@ -9,7 +9,6 @@ extern crate winapi;
 // https://docs.rs/winapi/*/x86_64-pc-windows-msvc/winapi/um/libloaderapi/index.html?search=winuser
 
 use game_core::game_loop;
-use game_core::GameState;
 use renderer::Renderer;
 use self::winapi::shared::minwindef::{LPARAM, LRESULT, UINT, WPARAM};
 use self::winapi::shared::windef::HWND;
@@ -44,6 +43,8 @@ use std::os::windows::ffi::OsStrExt;
 use std::ptr::null_mut;
 use std::time::Duration;
 use std::time::Instant;
+use game_core::game_init;
+use game_core::GameInput;
 
 mod renderer;
 
@@ -175,19 +176,21 @@ fn handle_messages(window: &mut Window) -> bool {
     }
 }
 
-fn get_input(game_state: &mut GameState) {
+fn get_input( )-> GameInput {
+    let mut input = GameInput::new();
     unsafe {
-        game_state.input.quit_key = GetAsyncKeyState(VK_ESCAPE) != 0;
-        game_state.input.left_key = GetAsyncKeyState(0x41) != 0;
-        game_state.input.right_key = GetAsyncKeyState(0x44) != 0;
-        game_state.input.down_key = GetAsyncKeyState(0x53) != 0;
-        game_state.input.up_key = GetAsyncKeyState(0x57) != 0;
-        game_state.input.space = GetAsyncKeyState(VK_SPACE) != 0;
-        game_state.input.shoot_down = GetAsyncKeyState(0x4B) != 0;
-        game_state.input.shoot_up = GetAsyncKeyState(0x49) != 0;
-        game_state.input.shoot_left = GetAsyncKeyState(0x4A) != 0;
-        game_state.input.shoot_right = GetAsyncKeyState(0x4C) != 0;
+        input.quit_key = GetAsyncKeyState(VK_ESCAPE) != 0;
+        input.left_key = GetAsyncKeyState(0x41) != 0;
+        input.right_key = GetAsyncKeyState(0x44) != 0;
+        input.down_key = GetAsyncKeyState(0x53) != 0;
+        input.up_key = GetAsyncKeyState(0x57) != 0;
+        input.space = GetAsyncKeyState(VK_SPACE) != 0;
+        input.shoot_down = GetAsyncKeyState(0x4B) != 0;
+        input.shoot_up = GetAsyncKeyState(0x49) != 0;
+        input.shoot_left = GetAsyncKeyState(0x4A) != 0;
+        input.shoot_right = GetAsyncKeyState(0x4C) != 0;
     }
+    input
 }
 
 static mut START_TIME: Option<Instant> = None;
@@ -199,21 +202,21 @@ fn main() {
     hide_console_window();
 
     let mut window = create_window("my_window", "Portfolio manager pro").unwrap();
-    let mut game_state = GameState::new(960.0, 540.0);
+    game_init(960.0, 540.0);
     unsafe {
         START_TIME = Some(Instant::now());
         LAST_FRAME_START = Some(Instant::now());
     }
     let mut renderer = renderer::create_simple_renderer(window.handle, 960, 540);
     loop {
-        if main_loop(&mut window, &mut game_state, &mut renderer) {
+        if main_loop(&mut window,  &mut renderer) {
             break;
         }
     }
 }
 
 
-fn main_loop(window: &mut Window, game_state: &mut GameState, renderer: &mut Renderer) -> bool {
+fn main_loop(window: &mut Window,  renderer: &mut Renderer) -> bool {
     if handle_messages(window) {
         return true;
     }
@@ -221,17 +224,16 @@ fn main_loop(window: &mut Window, game_state: &mut GameState, renderer: &mut Ren
         let last_frame_time = LAST_FRAME_START.unwrap().elapsed();
         LAST_FRAME_START = Some(Instant::now());
 
-        let delta = last_frame_time.subsec_micros() as f32;
-        game_state.time.delta = delta / (1000.0 * 1000.0);
+        let mut delta = last_frame_time.subsec_micros() as f32;
+        delta = delta / (1000.0 * 1000.0);
 
         let total_time = START_TIME.unwrap().elapsed();
-        game_state.time.time_elapsed = total_time.as_secs() as f32;
-        game_state.time.time_elapsed += total_time.subsec_micros() as f32 / (1000.0 * 1000.0);
+        let mut time_elapsed = total_time.as_secs() as f32;
+        time_elapsed += total_time.subsec_micros() as f32 / (1000.0 * 1000.0);
 
-        get_input(game_state);
-
-        let game_output = game_loop(game_state);
-
+        let input = get_input();
+        
+        let game_output = game_loop(input, time_elapsed, delta);
 
         if game_output.len() == 0 {
             return true;
