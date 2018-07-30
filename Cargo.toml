@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "win32",
-    "game-core"
+    "game-core",
+    "wasm"
 ]
