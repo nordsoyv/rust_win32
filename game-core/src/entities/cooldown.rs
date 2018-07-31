@@ -16,8 +16,12 @@ impl Cooldown {
     }
 
     pub fn update(&mut self, delta: f32) {
+        if delta.is_nan() {
+            return
+        }
         self.current -= delta;
-    }
+        }
+
 
     pub fn is_elapsed(&self) -> bool {
         self.current < 0.0

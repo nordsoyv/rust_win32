@@ -27,13 +27,14 @@ pub struct GameInput {
 }
 
 pub struct Platform {
-    pub random : fn () -> f32,
+    pub random: fn() -> f32,
+    pub log: fn(s:String)
 }
 
 static mut GAME_STATE: Option<GameState> = None;
-static mut PLATFORM : Option<Platform> = None;
+static mut PLATFORM: Option<Platform> = None;
 
-pub fn game_init(size_x: f32, size_y: f32, platform : Platform) {
+pub fn game_init(size_x: f32, size_y: f32, platform: Platform) {
     unsafe {
         PLATFORM = Some(platform);
         GAME_STATE = Some(GameState::new(size_x, size_y))
@@ -41,7 +42,6 @@ pub fn game_init(size_x: f32, size_y: f32, platform : Platform) {
 }
 
 pub fn game_loop(input: GameInput, time_elapsed: f32, delta: f32) -> Vec<Renderable> {
-
     unsafe {
         assert!(GAME_STATE.is_some());
         match GAME_STATE {
@@ -49,15 +49,15 @@ pub fn game_loop(input: GameInput, time_elapsed: f32, delta: f32) -> Vec<Rendera
                 if input.quit_key {
                     return Vec::new();
                 }
-                return gs.update(input,time_elapsed, delta);
-            }
-            None => {return Vec::new(); }
-        }
 
+                return gs.update(input, time_elapsed, delta);
+            }
+            None => { return Vec::new(); }
+        }
     }
 }
 
-pub fn get_random(min:f32, max :f32) -> f32 {
+pub fn get_random(min: f32, max: f32) -> f32 {
     unsafe {
         match PLATFORM {
             Some(ref pf) => {
@@ -66,6 +66,17 @@ pub fn get_random(min:f32, max :f32) -> f32 {
             None => {
                 return 0.0;
             }
+        }
+    }
+}
+
+pub fn log(text: String) {
+    unsafe {
+        match PLATFORM {
+            Some(ref pf) => {
+                (pf.log)(text);
+            }
+            None => {}
         }
     }
 }

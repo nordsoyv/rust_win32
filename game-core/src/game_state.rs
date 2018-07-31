@@ -15,7 +15,6 @@ use entities::Side;
 use entities::Collider;
 use get_random;
 
-
 pub struct GameState {
     frame: u32,
     time: GameTime,
@@ -74,6 +73,7 @@ impl GameState {
     }
 
     fn update_enemy_spawn(&mut self) {
+
         self.enemy_spawn.update(self.time.delta);
         if self.enemy_spawn.is_elapsed() {
             self.spawn_enemy();

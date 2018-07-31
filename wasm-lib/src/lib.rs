@@ -87,16 +87,14 @@ impl Rectangle {
 pub fn init() {
   let platform = game_core::Platform {
     random,
+    log
   };
-  log("Logging from rust".to_string());
   game_init(960.0, 540.0, platform);
 }
 
 #[wasm_bindgen]
 pub fn update(input_string: String, time_elapsed: f32, delta: f32) -> String {
-  log(input_string.clone());
   let input: PlayerInput = serde_json::from_str(&input_string).unwrap();
-  log(format!("{:?}", input));
   let res = game_loop(input.to_game_input(), time_elapsed, delta);
   let mut ret = Vec::new();
   for r in res {
