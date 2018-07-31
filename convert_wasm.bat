@@ -1,0 +1,1 @@
+wasm-bindgen target/wasm32-unknown-unknown/debug/wasm_lib.wasm --out-dir ./web-frontend/src/wasm
