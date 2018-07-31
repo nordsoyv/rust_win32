@@ -1,48 +1,82 @@
 const js = import("./wasm/wasm_lib.js");
 
-/*
+let input = {
+  up_key: false,
+  left_key: false,
+  right_key: false,
+  down_key: false,
+  shoot_down: false,
+  shoot_up: false,
+  shoot_left: false,
+  shoot_right: false,
+  quit_key: false,
+  space: false,
+};
+
+let update;
+let startTime;
+let lastFrameTime;
 
 
-  pub up_key: bool,
-    pub down_key: bool,
-    pub left_key: bool,
-    pub right_key: bool,
-    pub shoot_right: bool,
-    pub shoot_left: bool,
-    pub shoot_up: bool,
-    pub shoot_down: bool,
-    pub quit_key: bool,
-    pub space: bool,
-
-*/
 js.then(js => {
-  // js.greet("World!");
-  js.init();
-  let input = {
-    up_key: true,
-    left_key : false,
-    right_key : false,
-    down_key : false,
-    shoot_down : false,
-    shoot_up : false,
-    shoot_left : false,
-    shoot_right : false,
-    quit_key : false,
-    space : false,
-  }
-  let a = js.update(JSON.stringify(input), 0.0, 0.1 );
-  let render = JSON.parse(a);
-  console.log(render);
+  update = js.update;
+  document.addEventListener('keydown', event => {
 
-  let canvas = document.getElementById('canvas');
-  let ctx = canvas.getContext('2d');
-
-  render.forEach(r => {
-    ctx.fillStyle = 'rgb(' + Math.floor(r.red) + ','+ Math.floor(r.green) + ','+ Math.floor(r.blue) + ')';
-    ctx.fillRect(r.left, r.top, r.right - r.left, r.bottom- r.top);
+    if(event.key === 'w') input.up_key = true;
+    if(event.key === 'a') input.left_key = true;
+    if(event.key === 's') input.down_key = true;
+    if(event.key === 'd') input.right_key = true;
+    if(event.key === 'i') input.shoot_up = true;
+    if(event.key === 'j') input.shoot_left = true;
+    if(event.key === 'k') input.shoot_down = true;
+    if(event.key === 'l') input.shoot_right = true;
+    if(event.key === 'q') input.quit_key = true;
+    if(event.key === ' ') input.space = true;
+  //  console.log(input);
   })
 
+  document.addEventListener('keyup', event => {
+    if(event.key === 'w') input.up_key = false;
+    if(event.key === 'a') input.left_key = false;
+    if(event.key === 's') input.down_key = false;
+    if(event.key === 'd') input.right_key = false;
+    if(event.key === 'i') input.shoot_up = false;
+    if(event.key === 'j') input.shoot_left = false;
+    if(event.key === 'l') input.shoot_right = false;
+    if(event.key === 'k') input.shoot_down = false;
+    if(event.key === 'q') input.quit_key = false;
+    if(event.key === ' ') input.space = false;
+  })
+
+  js.init();
+
+  startTime = performance.now();
+
+  requestAnimationFrame(mainLoop);
   // ctx.fillStyle = 'rgb(' + Math.floor(render[0].red) + ','+ Math.floor(render[0].green) + ','+ Math.floor(render[0].blue) + ')'
   // ctx.fillRect(render[0].)
 });
 
+
+const mainLoop = () => {
+  let currentTime = performance.now();
+  let elapsedTime = (currentTime - startTime)/1000;
+  let delta = currentTime - lastFrameTime;
+  lastFrameTime = currentTime;
+  let a = update(JSON.stringify(input), elapsedTime, delta);
+  let render = JSON.parse(a);
+//   console.log(render);
+
+  let canvas = document.getElementById('canvas');
+  let ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,960,540);
+  render.forEach(r => {
+    let width = r.right - r.left;
+    let height = r.bottom - r.top;
+    let left = r.left;
+    let top = r.top;
+    ctx.fillStyle = 'rgb(' + Math.floor(r.red) + ',' + Math.floor(r.green) + ',' + Math.floor(r.blue) + ')';
+    ctx.fillRect(left, top,width, height);
+  });
+  requestAnimationFrame(mainLoop);
+};
