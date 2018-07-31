@@ -21,6 +21,11 @@ extern {
     fn alert(s : &str);
 }
 
+#[wasm_bindgen(module = "./platform")]
+extern {
+    fn random() -> f32;
+}
+
 #[derive(Serialize,Deserialize,Debug)]
 pub struct PlayerInput {
     pub up_key: bool,
@@ -89,6 +94,8 @@ pub fn greet(name : &str) {
 #[wasm_bindgen]
 pub fn init() {
     game_init(960.0, 540.0);
+    let r = random();
+    alert(&format!("number from js {}", r));
 }
 
 #[wasm_bindgen]

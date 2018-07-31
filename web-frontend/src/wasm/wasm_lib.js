@@ -1,5 +1,6 @@
 /* tslint:disable */
 import * as wasm from './wasm_lib_bg';
+import { random } from './platform';
 
 const TextDecoder = typeof self === 'object' && self.TextDecoder
     ? self.TextDecoder
@@ -22,6 +23,10 @@ function getStringFromWasm(ptr, len) {
 export function __wbg_alert_cda2b2f786363be5(arg0, arg1) {
     let varg0 = getStringFromWasm(arg0, arg1);
     alert(varg0);
+}
+
+export function __wbg_random_677791a27e7cfa8f() {
+    return random();
 }
 
 const TextEncoder = typeof self === 'object' && self.TextEncoder
