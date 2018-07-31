@@ -53,6 +53,48 @@ export function greet(arg0) {
     
 }
 
+/**
+* @returns {void}
+*/
+export function init() {
+    return wasm.init();
+}
+
+let cachedGlobalArgumentPtr = null;
+function globalArgumentPtr() {
+    if (cachedGlobalArgumentPtr === null) {
+        cachedGlobalArgumentPtr = wasm.__wbindgen_global_argument_ptr();
+    }
+    return cachedGlobalArgumentPtr;
+}
+
+let cachegetUint32Memory = null;
+function getUint32Memory() {
+    if (cachegetUint32Memory === null || cachegetUint32Memory.buffer !== wasm.memory.buffer) {
+        cachegetUint32Memory = new Uint32Array(wasm.memory.buffer);
+    }
+    return cachegetUint32Memory;
+}
+/**
+* @param {string} arg0
+* @param {number} arg1
+* @param {number} arg2
+* @returns {string}
+*/
+export function update(arg0, arg1, arg2) {
+    const [ptr0, len0] = passStringToWasm(arg0);
+    const retptr = globalArgumentPtr();
+    wasm.update(retptr, ptr0, len0, arg1, arg2);
+    const mem = getUint32Memory();
+    const ptr = mem[retptr / 4];
+    const len = mem[retptr / 4 + 1];
+    
+    const realRet = getStringFromWasm(ptr, len).slice();
+    wasm.__wbindgen_free(ptr, len * 1);
+    return realRet;
+    
+}
+
 export function __wbindgen_throw(ptr, len) {
     throw new Error(getStringFromWasm(ptr, len));
 }
