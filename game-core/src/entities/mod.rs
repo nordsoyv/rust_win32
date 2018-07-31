@@ -28,6 +28,7 @@ pub trait Drawable: Collider {
     fn get_color(&self) -> Color;
 }
 
+#[derive(Debug)]
 pub struct BoundingBox {
     pub left: f32,
     pub right: f32,

@@ -5,11 +5,12 @@ extern crate game_core;
 extern crate libc;
 #[cfg(windows)]
 extern crate winapi;
-
+extern crate rand;
 // https://docs.rs/winapi/*/x86_64-pc-windows-msvc/winapi/um/libloaderapi/index.html?search=winuser
 
 use game_core::game_loop;
 use renderer::Renderer;
+use rand::prelude::*;
 use self::winapi::shared::minwindef::{LPARAM, LRESULT, UINT, WPARAM};
 use self::winapi::shared::windef::HWND;
 use self::winapi::um::libloaderapi::GetModuleHandleW;
@@ -45,6 +46,7 @@ use std::time::Duration;
 use std::time::Instant;
 use game_core::game_init;
 use game_core::GameInput;
+use game_core::Platform;
 
 mod renderer;
 
@@ -196,13 +198,21 @@ fn get_input( )-> GameInput {
 static mut START_TIME: Option<Instant> = None;
 static mut LAST_FRAME_START: Option<Instant> = None;
 
+fn get_random() -> f32 {
+    let mut rng = thread_rng();
+    let x = rng.gen();
+    return x;
+}
 
 #[cfg(windows)]
 fn main() {
     hide_console_window();
 
     let mut window = create_window("my_window", "Portfolio manager pro").unwrap();
-    game_init(960.0, 540.0);
+    let platform = Platform {
+        random: get_random,
+    };
+    game_init(960.0, 540.0, platform);
     unsafe {
         START_TIME = Some(Instant::now());
         LAST_FRAME_START = Some(Instant::now());

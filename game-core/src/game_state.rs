@@ -8,12 +8,12 @@ use GameTime;
 use entities::enemies::Enemy;
 use entities::cooldown::Cooldown;
 use Renderable;
-use rand::prelude::*;
 use math::vector::Vector2d;
 use entities::enemies::EnemyType;
 use entities::Intersection;
 use entities::Side;
 use entities::Collider;
+use get_random;
 
 
 pub struct GameState {
@@ -82,15 +82,14 @@ impl GameState {
     }
 
     fn spawn_enemy(&mut self) {
-        let mut rng = thread_rng();
-        let mut x = rng.gen_range(5, (self.world_size_x - 5.0) as i32);
-        let mut y = rng.gen_range(5, (self.world_size_y - 5.0) as i32);
+        let mut x =  get_random(5.0, self.world_size_x - 5.0);
+        let mut y = get_random(5.0, self.world_size_y - 5.0);
         let mut rand_pos = Vector2d::new(x as f32, y as f32);
         rand_pos.sub(&self.player.get_position());
 
         while rand_pos.len() < 100.0 {
-            x = rng.gen_range(5, (self.world_size_x - 5.0) as i32);
-            y = rng.gen_range(5, (self.world_size_y - 5.0) as i32);
+            x =  get_random(5.0, self.world_size_x - 5.0);
+            y = get_random(5.0, self.world_size_y - 5.0);
             rand_pos = Vector2d::new(x as f32, y as f32);
             rand_pos.sub(&self.player.get_position());
         }

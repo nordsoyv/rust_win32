@@ -1,6 +1,11 @@
 /* tslint:disable */
 import * as wasm from './wasm_lib_bg';
 import { random } from './platform';
+import { log } from './platform';
+
+export function __wbg_random_677791a27e7cfa8f() {
+    return random();
+}
 
 const TextDecoder = typeof self === 'object' && self.TextDecoder
     ? self.TextDecoder
@@ -20,13 +25,19 @@ function getStringFromWasm(ptr, len) {
     return cachedDecoder.decode(getUint8Memory().subarray(ptr, ptr + len));
 }
 
-export function __wbg_alert_cda2b2f786363be5(arg0, arg1) {
+export function __wbg_log_85a925654c9c374f(arg0, arg1) {
     let varg0 = getStringFromWasm(arg0, arg1);
-    alert(varg0);
+    
+    varg0 = varg0.slice();
+    wasm.__wbindgen_free(arg0, arg1 * 1);
+    
+    log(varg0);
 }
-
-export function __wbg_random_677791a27e7cfa8f() {
-    return random();
+/**
+* @returns {void}
+*/
+export function init() {
+    return wasm.init();
 }
 
 const TextEncoder = typeof self === 'object' && self.TextEncoder
@@ -41,28 +52,6 @@ function passStringToWasm(arg) {
     const ptr = wasm.__wbindgen_malloc(buf.length);
     getUint8Memory().set(buf, ptr);
     return [ptr, buf.length];
-}
-/**
-* @param {string} arg0
-* @returns {void}
-*/
-export function greet(arg0) {
-    const [ptr0, len0] = passStringToWasm(arg0);
-    try {
-        return wasm.greet(ptr0, len0);
-        
-    } finally {
-        wasm.__wbindgen_free(ptr0, len0 * 1);
-        
-    }
-    
-}
-
-/**
-* @returns {void}
-*/
-export function init() {
-    return wasm.init();
 }
 
 let cachedGlobalArgumentPtr = null;

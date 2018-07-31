@@ -1,5 +1,3 @@
-extern crate rand;
-
 use entities::BoundingBox;
 use entities::Color;
 use game_state::GameState;
@@ -9,6 +7,7 @@ mod game_state;
 
 mod math;
 
+#[derive(Debug)]
 pub struct Renderable {
     pub rect: BoundingBox,
     pub color: Color,
@@ -27,10 +26,16 @@ pub struct GameInput {
     pub space: bool,
 }
 
-static mut GAME_STATE: Option<GameState> = None;
+pub struct Platform {
+    pub random : fn () -> f32,
+}
 
-pub fn game_init(size_x: f32, size_y: f32) {
+static mut GAME_STATE: Option<GameState> = None;
+static mut PLATFORM : Option<Platform> = None;
+
+pub fn game_init(size_x: f32, size_y: f32, platform : Platform) {
     unsafe {
+        PLATFORM = Some(platform);
         GAME_STATE = Some(GameState::new(size_x, size_y))
     }
 }
@@ -49,6 +54,19 @@ pub fn game_loop(input: GameInput, time_elapsed: f32, delta: f32) -> Vec<Rendera
             None => {return Vec::new(); }
         }
 
+    }
+}
+
+pub fn get_random(min:f32, max :f32) -> f32 {
+    unsafe {
+        match PLATFORM {
+            Some(ref pf) => {
+                return (pf.random)() * (max - min) + min;
+            }
+            None => {
+                return 0.0;
+            }
+        }
     }
 }
 
