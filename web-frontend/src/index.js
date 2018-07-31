@@ -72,9 +72,9 @@ const mainLoop = () => {
   ctx.clearRect(0,0,960,540);
   render.forEach(r => {
     let width = r.right - r.left;
-    let height = r.bottom - r.top;
+    let height = r.top - r.bottom;
     let left = r.left;
-    let top = r.top;
+    let top = 540 - r.top;
     ctx.fillStyle = 'rgb(' + Math.floor(r.red) + ',' + Math.floor(r.green) + ',' + Math.floor(r.blue) + ')';
     ctx.fillRect(left, top,width, height);
   });
