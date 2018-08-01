@@ -4,3 +4,5 @@ version = "0.1.0"
 authors = ["Øyvind <oyvind.nordsveen@gmail.com>"]
 
 [dependencies]
+glutin = "0.17.0"
+gl = "*"
