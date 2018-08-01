@@ -16,10 +16,7 @@ impl Cooldown {
     }
 
     pub fn update(&mut self, delta: f32) {
-        if delta.is_nan() {
-            return
-        }
-        self.current -= delta;
+         self.current -= delta;
         }
 
 
