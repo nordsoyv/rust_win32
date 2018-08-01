@@ -1,0 +1,6 @@
+[package]
+name = "gl-front"
+version = "0.1.0"
+authors = ["Øyvind <oyvind.nordsveen@gmail.com>"]
+
+[dependencies]

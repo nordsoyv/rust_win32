@@ -40,6 +40,10 @@ name = "game-core"
 version = "0.1.0"
 
 [[package]]
+name = "gl-front"
+version = "0.1.0"
+
+[[package]]
 name = "itoa"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

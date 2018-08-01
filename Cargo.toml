@@ -2,5 +2,6 @@
 members = [
     "win32",
     "game-core",
-    "wasm-lib"
+    "wasm-lib",
+    "gl-front"
 ]
