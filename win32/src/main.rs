@@ -204,6 +204,10 @@ fn get_random() -> f32 {
     return x;
 }
 
+fn log(s:String) {
+    println!("{}",s);
+}
+
 #[cfg(windows)]
 fn main() {
     hide_console_window();
@@ -211,6 +215,7 @@ fn main() {
     let mut window = create_window("my_window", "Portfolio manager pro").unwrap();
     let platform = Platform {
         random: get_random,
+        log
     };
     game_init(960.0, 540.0, platform);
     unsafe {
