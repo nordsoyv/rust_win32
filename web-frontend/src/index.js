@@ -14,8 +14,8 @@ let input = {
 };
 
 let update;
-let startTime;
-let lastFrameTime;
+let startTime = 0;
+let lastFrameTime = 0;
 
 
 js.then(js => {
@@ -53,21 +53,19 @@ js.then(js => {
     requestAnimationFrame(mainLoop);
 });
 
+let frameCounter = 0;
 
 const mainLoop = () => {
     let currentTime = performance.now();
     let elapsedTime = (currentTime - startTime) / 1000;
     let delta = (currentTime - lastFrameTime) /1000;
     lastFrameTime = currentTime;
-    // console.log(elapsedTime, delta);
-    let a = update(JSON.stringify(input), elapsedTime, delta);
-    let render = JSON.parse(a);
-    //console.log(render);
-   // console.log(render.length);
+    let objToRenderJSON = update(JSON.stringify(input), elapsedTime, delta);
+    let objToRender = JSON.parse(objToRenderJSON);
     let canvas = document.getElementById('canvas');
     let ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, 960, 540);
-    render.forEach(r => {
+    objToRender.forEach(r => {
         let width = r.right - r.left;
         let height = r.top - r.bottom;
         let left = r.left;
@@ -76,4 +74,5 @@ const mainLoop = () => {
         ctx.fillRect(left, top, width, height);
     });
     requestAnimationFrame(mainLoop);
+    frameCounter++;
 };
