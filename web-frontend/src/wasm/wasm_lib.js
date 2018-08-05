@@ -2,6 +2,9 @@
 import * as wasm from './wasm_lib_bg';
 import { random } from './platform';
 import { log } from './platform';
+import { start_frame } from './platform';
+import { end_frame } from './platform';
+import { draw_rectangle } from './platform';
 
 export function __wbg_random_677791a27e7cfa8f() {
     return random();
@@ -33,6 +36,18 @@ export function __wbg_log_85a925654c9c374f(arg0, arg1) {
     
     log(varg0);
 }
+
+export function __wbg_start_frame_0f2f1c60193b9b75() {
+    start_frame();
+}
+
+export function __wbg_end_frame_a56b016ede2f678d() {
+    end_frame();
+}
+
+export function __wbg_draw_rectangle_b1d01c6b7a266db4(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
+    draw_rectangle(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+}
 /**
 * @returns {void}
 */
@@ -53,40 +68,15 @@ function passStringToWasm(arg) {
     getUint8Memory().set(buf, ptr);
     return [ptr, buf.length];
 }
-
-let cachedGlobalArgumentPtr = null;
-function globalArgumentPtr() {
-    if (cachedGlobalArgumentPtr === null) {
-        cachedGlobalArgumentPtr = wasm.__wbindgen_global_argument_ptr();
-    }
-    return cachedGlobalArgumentPtr;
-}
-
-let cachegetUint32Memory = null;
-function getUint32Memory() {
-    if (cachegetUint32Memory === null || cachegetUint32Memory.buffer !== wasm.memory.buffer) {
-        cachegetUint32Memory = new Uint32Array(wasm.memory.buffer);
-    }
-    return cachegetUint32Memory;
-}
 /**
 * @param {string} arg0
 * @param {number} arg1
 * @param {number} arg2
-* @returns {string}
+* @returns {void}
 */
 export function update(arg0, arg1, arg2) {
     const [ptr0, len0] = passStringToWasm(arg0);
-    const retptr = globalArgumentPtr();
-    wasm.update(retptr, ptr0, len0, arg1, arg2);
-    const mem = getUint32Memory();
-    const ptr = mem[retptr / 4];
-    const len = mem[retptr / 4 + 1];
-    
-    const realRet = getStringFromWasm(ptr, len).slice();
-    wasm.__wbindgen_free(ptr, len * 1);
-    return realRet;
-    
+    return wasm.update(ptr0, len0, arg1, arg2);
 }
 
 export function __wbindgen_throw(ptr, len) {

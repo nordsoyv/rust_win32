@@ -100,7 +100,7 @@ impl SimpleRenderer {
         )
     }
 
-    fn draw_rectangle(&self, min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: Color) {
+    pub fn draw_rectangle(&self, min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: Color) {
         let mut start_x = min_x as i32;
         if start_x < 0 {
             start_x = 0;
@@ -159,7 +159,7 @@ impl SimpleRenderer {
         }
     }
 
-    fn clear_screen(&mut self) {
+    pub fn clear_screen(&mut self) {
         unsafe {
             VirtualFree(self.back_buffer.memory, 0, MEM_RELEASE);
             let bitmap_memory_size = self.back_buffer.width * self.back_buffer.height * 4;
@@ -169,6 +169,25 @@ impl SimpleRenderer {
                 MEM_COMMIT,
                 PAGE_READWRITE,
             )
+        }
+    }
+    pub fn end_frame(&self){
+        unsafe {
+            StretchDIBits(
+                self.hdc,
+                0,
+                0,
+                self.window_width,
+                self.window_height,
+                0,
+                0,
+                self.back_buffer.width,
+                self.back_buffer.height,
+                self.back_buffer.memory,
+                &self.back_buffer.info,
+                DIB_RGB_COLORS,
+                SRCCOPY,
+            );
         }
     }
 }
@@ -199,4 +218,6 @@ impl Renderer for SimpleRenderer {
             );
         }
     }
+
+
 }

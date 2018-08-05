@@ -3,14 +3,18 @@
 
 extern crate game_core;
 extern crate libc;
+extern crate rand;
 #[cfg(windows)]
 extern crate winapi;
-extern crate rand;
 // https://docs.rs/winapi/*/x86_64-pc-windows-msvc/winapi/um/libloaderapi/index.html?search=winuser
 
+use game_core::entities::Color;
+use game_core::game_init;
 use game_core::game_loop;
-use renderer::Renderer;
+use game_core::GameInput;
+use game_core::Platform;
 use rand::prelude::*;
+use renderer::simplerenderer::SimpleRenderer;
 use self::winapi::shared::minwindef::{LPARAM, LRESULT, UINT, WPARAM};
 use self::winapi::shared::windef::HWND;
 use self::winapi::um::libloaderapi::GetModuleHandleW;
@@ -44,9 +48,6 @@ use std::os::windows::ffi::OsStrExt;
 use std::ptr::null_mut;
 use std::time::Duration;
 use std::time::Instant;
-use game_core::game_init;
-use game_core::GameInput;
-use game_core::Platform;
 
 mod renderer;
 
@@ -178,7 +179,7 @@ fn handle_messages(window: &mut Window) -> bool {
     }
 }
 
-fn get_input( )-> GameInput {
+fn get_input() -> GameInput {
     let mut input = GameInput::new();
     unsafe {
         input.quit_key = GetAsyncKeyState(VK_ESCAPE) != 0;
@@ -197,6 +198,8 @@ fn get_input( )-> GameInput {
 
 static mut START_TIME: Option<Instant> = None;
 static mut LAST_FRAME_START: Option<Instant> = None;
+static mut RENDERER: Option<SimpleRenderer> = None;
+
 
 fn get_random() -> f32 {
     let mut rng = thread_rng();
@@ -204,8 +207,49 @@ fn get_random() -> f32 {
     return x;
 }
 
-fn log(s:String) {
-    println!("{}",s);
+fn log(s: String) {
+    println!("{}", s);
+}
+
+
+fn start_frame() {
+    unsafe {
+        match RENDERER {
+            Some(ref mut r) => {
+                r.clear_screen();
+            }
+            None => {
+                panic!("No renderer given")
+            }
+        }
+    }
+}
+
+
+fn end_frame() {
+    unsafe {
+        match RENDERER {
+            Some(ref mut r) => {
+                r.end_frame();
+            }
+            None => {
+                panic!("No renderer given")
+            }
+        }
+    }
+}
+
+fn draw_rectangle(min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: Color) {
+    unsafe {
+        match RENDERER {
+            Some(ref mut r) => {
+                r.draw_rectangle(min_x, min_y, max_x, max_y, color);
+            }
+            None => {
+                panic!("No renderer given")
+            }
+        }
+    }
 }
 
 #[cfg(windows)]
@@ -213,25 +257,33 @@ fn main() {
     hide_console_window();
 
     let mut window = create_window("my_window", "Portfolio manager pro").unwrap();
+
+    unsafe {
+        RENDERER = Some(renderer::create_simple_renderer(window.handle, 960, 540));
+    }
+
+
     let platform = Platform {
         random: get_random,
-        log
+        log,
+        start_frame,
+        end_frame,
+        draw_rectangle,
     };
     game_init(960.0, 540.0, platform);
     unsafe {
         START_TIME = Some(Instant::now());
         LAST_FRAME_START = Some(Instant::now());
     }
-    let mut renderer = renderer::create_simple_renderer(window.handle, 960, 540);
     loop {
-        if main_loop(&mut window,  &mut renderer) {
+        if main_loop(&mut window) {
             break;
         }
     }
 }
 
 
-fn main_loop(window: &mut Window,  renderer: &mut Renderer) -> bool {
+fn main_loop(window: &mut Window) -> bool {
     if handle_messages(window) {
         return true;
     }
@@ -247,14 +299,13 @@ fn main_loop(window: &mut Window,  renderer: &mut Renderer) -> bool {
         time_elapsed += total_time.subsec_micros() as f32 / (1000.0 * 1000.0);
 
         let input = get_input();
-        
+
         let game_output = game_loop(input, time_elapsed, delta);
 
-        if game_output.len() == 0 {
+        if game_output {
             return true;
         }
 
-        renderer.render_frame(game_output);
         let frame_time = LAST_FRAME_START.unwrap().elapsed();
 //        println!("Frame time {:?}", frame_time.subsec_millis());
 
@@ -267,6 +318,7 @@ fn main_loop(window: &mut Window,  renderer: &mut Renderer) -> bool {
                 frame_time.subsec_millis()
             )
         }
+
 
         return false;
     }

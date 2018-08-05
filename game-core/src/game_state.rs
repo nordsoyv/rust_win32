@@ -1,19 +1,21 @@
-use GameInput;
-use entities::player::Player;
-use entities::wall::Wall;
+use draw_rectangle;
+use end_frame;
 use entities::bullet::Bullet;
-use entities::Drawable;
-use entities::Position;
-use GameTime;
-use entities::enemies::Enemy;
+use entities::Collider;
 use entities::cooldown::Cooldown;
-use Renderable;
-use math::vector::Vector2d;
+use entities::Drawable;
+use entities::enemies::Enemy;
 use entities::enemies::EnemyType;
 use entities::Intersection;
+use entities::player::Player;
+use entities::Position;
 use entities::Side;
-use entities::Collider;
+use entities::wall::Wall;
+use GameInput;
+use GameTime;
 use get_random;
+use math::vector::Vector2d;
+use start_frame;
 
 pub struct GameState {
     frame: u32,
@@ -28,8 +30,8 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub fn update(&mut self,input : GameInput, time_elapsed: f32, delta: f32) -> Vec<Renderable> {
-        self.frame +=1;
+    pub fn update(&mut self, input: GameInput, time_elapsed: f32, delta: f32) {
+        self.frame += 1;
         self.time.time_elapsed = time_elapsed;
         self.time.delta = delta;
         self.update_enemy_spawn();
@@ -43,37 +45,27 @@ impl GameState {
 
         self.check_bullets_enemies_intersections();
 
-        let mut drawables: Vec<Renderable> = Vec::new();
+        start_frame();
         for b in &self.bullets {
-            drawables.push(Renderable {
-                rect: b.get_bounding_box(),
-                color: b.get_color(),
-            });
+            let rect = b.get_bounding_box();
+            draw_rectangle(rect.left, rect.bottom, rect.right, rect.top, b.get_color());
         }
-
-        drawables.push(Renderable {
-            rect: self.player.get_bounding_box(),
-            color: self.player.get_color(),
-        });
+        {
+            let rect = self.player.get_bounding_box();
+            draw_rectangle(rect.left, rect.bottom, rect.right, rect.top, self.player.get_color());
+        }
         for e in &self.enemies {
-            drawables.push(Renderable {
-                rect: e.get_bounding_box(),
-                color: e.get_color(),
-            });
+            let rect = e.get_bounding_box();
+            draw_rectangle(rect.left, rect.bottom, rect.right, rect.top, e.get_color());
         }
         for w in &self.walls {
-            drawables.push(Renderable {
-                rect: w.get_bounding_box(),
-                color: w.get_color(),
-            });
+            let rect = w.get_bounding_box();
+            draw_rectangle(rect.left, rect.bottom, rect.right, rect.top, w.get_color());
         }
-
-
-        drawables
+        end_frame();
     }
 
     fn update_enemy_spawn(&mut self) {
-
         self.enemy_spawn.update(self.time.delta);
         if self.enemy_spawn.is_elapsed() {
             self.spawn_enemy();
@@ -82,13 +74,13 @@ impl GameState {
     }
 
     fn spawn_enemy(&mut self) {
-        let mut x =  get_random(5.0, self.world_size_x - 5.0);
+        let mut x = get_random(5.0, self.world_size_x - 5.0);
         let mut y = get_random(5.0, self.world_size_y - 5.0);
         let mut rand_pos = Vector2d::new(x as f32, y as f32);
         rand_pos.sub(&self.player.get_position());
 
         while rand_pos.len() < 100.0 {
-            x =  get_random(5.0, self.world_size_x - 5.0);
+            x = get_random(5.0, self.world_size_x - 5.0);
             y = get_random(5.0, self.world_size_y - 5.0);
             rand_pos = Vector2d::new(x as f32, y as f32);
             rand_pos.sub(&self.player.get_position());

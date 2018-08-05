@@ -60,19 +60,7 @@ const mainLoop = () => {
     let elapsedTime = (currentTime - startTime) / 1000;
     let delta = (currentTime - lastFrameTime) /1000;
     lastFrameTime = currentTime;
-    let objToRenderJSON = update(JSON.stringify(input), elapsedTime, delta);
-    let objToRender = JSON.parse(objToRenderJSON);
-    let canvas = document.getElementById('canvas');
-    let ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, 960, 540);
-    objToRender.forEach(r => {
-        let width = r.right - r.left;
-        let height = r.top - r.bottom;
-        let left = r.left;
-        let top = 540 - r.top;
-        ctx.fillStyle = 'rgb(' + Math.floor(r.red) + ',' + Math.floor(r.green) + ',' + Math.floor(r.blue) + ')';
-        ctx.fillRect(left, top, width, height);
-    });
+    update(JSON.stringify(input), elapsedTime, delta);
     requestAnimationFrame(mainLoop);
     frameCounter++;
 };

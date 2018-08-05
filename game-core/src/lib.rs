@@ -28,7 +28,10 @@ pub struct GameInput {
 
 pub struct Platform {
     pub random: fn() -> f32,
-    pub log: fn(s:String)
+    pub log: fn(s:String),
+    pub start_frame : fn (),
+    pub end_frame: fn (),
+    pub draw_rectangle : fn( min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: Color),
 }
 
 static mut GAME_STATE: Option<GameState> = None;
@@ -41,18 +44,19 @@ pub fn game_init(size_x: f32, size_y: f32, platform: Platform) {
     }
 }
 
-pub fn game_loop(input: GameInput, time_elapsed: f32, delta: f32) -> Vec<Renderable> {
+pub fn game_loop(input: GameInput, time_elapsed: f32, delta: f32) -> bool {
     unsafe {
         assert!(GAME_STATE.is_some());
         match GAME_STATE {
             Some(ref mut gs) => {
                 if input.quit_key {
-                    return Vec::new();
+                    return true;
                 }
 
-                return gs.update(input, time_elapsed, delta);
+                gs.update(input, time_elapsed, delta);
+                return false
             }
-            None => { return Vec::new(); }
+            None => {return true}
         }
     }
 }
@@ -80,6 +84,41 @@ pub fn log(text: String) {
         }
     }
 }
+
+pub fn start_frame(){
+    unsafe{
+        match PLATFORM {
+            Some(ref pf) => {
+                (pf.start_frame)();
+            }
+            None => {}
+        }
+    }
+}
+
+pub fn end_frame(){
+    unsafe{
+        match PLATFORM {
+            Some(ref pf) => {
+                (pf.end_frame)();
+            }
+            None => {}
+        }
+    }
+}
+
+pub fn draw_rectangle(min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: Color){
+    unsafe{
+        match PLATFORM {
+            Some(ref pf) => {
+
+                (pf.draw_rectangle)(min_x,min_y,max_x,max_y,color);
+            }
+            None => {}
+        }
+    }
+}
+
 
 impl GameInput {
     pub fn new() -> GameInput {
