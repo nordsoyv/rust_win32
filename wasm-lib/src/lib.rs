@@ -6,19 +6,11 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate wasm_bindgen;
 
-
 use game_core::game_init;
 use game_core::game_loop;
 use game_core::GameInput;
-use game_core::Renderable;
 use wasm_bindgen::prelude::*;
 use game_core::entities::Color;
-
-
-#[wasm_bindgen]
-extern {
-    fn alert(s: &str);
-}
 
 #[wasm_bindgen(module = "./platform")]
 extern {
@@ -61,20 +53,6 @@ impl PlayerInput {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Rectangle {
-    pub left: f32,
-    pub right: f32,
-    pub top: f32,
-    pub bottom: f32,
-    pub red: u8,
-    pub green: u8,
-    pub blue: u8,
-}
-
-impl Rectangle {
-}
-
 fn draw_rectangle_inner (min_x: f32, min_y: f32, max_x: f32, max_y: f32, color:Color) {
     draw_rectangle(min_x,min_y,max_x,max_y,color.r,color.g,color.b);
 }
@@ -95,7 +73,6 @@ pub fn init() {
 pub fn update(input_string: String, time_elapsed: f32, delta: f32)  {
     let input: PlayerInput = serde_json::from_str(&input_string).unwrap();
     game_loop(input.to_game_input(), time_elapsed, delta);
-
 }
 
 

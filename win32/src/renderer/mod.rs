@@ -1,12 +1,7 @@
-use game_core::Renderable;
 use renderer::simplerenderer::SimpleRenderer;
 use winapi::shared::windef::HWND;
 
 pub mod simplerenderer;
-
-pub trait Renderer {
-    fn render_frame(&mut self, game_state: Vec<Renderable>);
-}
 
 pub fn create_simple_renderer(
     handle: HWND,

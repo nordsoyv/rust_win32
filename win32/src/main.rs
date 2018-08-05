@@ -211,7 +211,6 @@ fn log(s: String) {
     println!("{}", s);
 }
 
-
 fn start_frame() {
     unsafe {
         match RENDERER {
@@ -260,8 +259,9 @@ fn main() {
 
     unsafe {
         RENDERER = Some(renderer::create_simple_renderer(window.handle, 960, 540));
+        START_TIME = Some(Instant::now());
+        LAST_FRAME_START = Some(Instant::now());
     }
-
 
     let platform = Platform {
         random: get_random,
@@ -271,10 +271,6 @@ fn main() {
         draw_rectangle,
     };
     game_init(960.0, 540.0, platform);
-    unsafe {
-        START_TIME = Some(Instant::now());
-        LAST_FRAME_START = Some(Instant::now());
-    }
     loop {
         if main_loop(&mut window) {
             break;
@@ -299,9 +295,7 @@ fn main_loop(window: &mut Window) -> bool {
         time_elapsed += total_time.subsec_micros() as f32 / (1000.0 * 1000.0);
 
         let input = get_input();
-
         let game_output = game_loop(input, time_elapsed, delta);
-
         if game_output {
             return true;
         }
@@ -318,8 +312,6 @@ fn main_loop(window: &mut Window) -> bool {
                 frame_time.subsec_millis()
             )
         }
-
-
         return false;
     }
 }

@@ -1,7 +1,5 @@
 use game_core::entities::Color;
-use game_core::Renderable;
 use libc;
-use renderer::Renderer;
 use std;
 use std::mem;
 use winapi::shared::minwindef::LPVOID;
@@ -88,18 +86,6 @@ pub fn create_simple_renderer(
 }
 
 impl SimpleRenderer {
-    fn draw_obj(&self, obj: Renderable) {
-        let rect = obj.rect;
-        self.draw_rectangle(
-            rect.left,
-            rect.bottom,
-            rect.right,
-            rect.top,
-            obj.color
-            ,
-        )
-    }
-
     pub fn draw_rectangle(&self, min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: Color) {
         let mut start_x = min_x as i32;
         if start_x < 0 {
@@ -190,34 +176,4 @@ impl SimpleRenderer {
             );
         }
     }
-}
-
-impl Renderer for SimpleRenderer {
-    fn render_frame(&mut self, game_state: Vec<Renderable>) {
-        self.clear_screen();
-
-        for e in game_state {
-            self.draw_obj(e);
-        }
-
-        unsafe {
-            StretchDIBits(
-                self.hdc,
-                0,
-                0,
-                self.window_width,
-                self.window_height,
-                0,
-                0,
-                self.back_buffer.width,
-                self.back_buffer.height,
-                self.back_buffer.memory,
-                &self.back_buffer.info,
-                DIB_RGB_COLORS,
-                SRCCOPY,
-            );
-        }
-    }
-
-
 }
