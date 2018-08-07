@@ -1,0 +1,10 @@
+[package]
+name = "gl"
+version = "0.1.0"
+authors = ["Øyvind Nordsveen <oyvind.nordsveen@confirmit.com>"]
+
+[dependencies]
+
+[build-dependencies]
+gl_generator = "0.9.0"
+
