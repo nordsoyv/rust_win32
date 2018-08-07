@@ -1,12 +1,17 @@
 extern crate gl;
 extern crate glutin;
 
+mod render_gl;
+mod resources;
+
 use glutin::dpi::*;
 use glutin::GlContext;
-
-mod render_gl;
+use resources::Resources;
+use std::path::Path;
 
 fn main() {
+  let res = Resources::from_relative_exe_path(Path::new("assets")).unwrap();
+
   let mut events_loop = glutin::EventsLoop::new();
   let window = glutin::WindowBuilder::new()
       .with_title("Hello, world!")
@@ -30,20 +35,7 @@ fn main() {
 
   use std::ffi::CString;
 
-  let vert_shader = render_gl::Shader::from_vert_source(
-    &gl,
-    &CString::new(include_str!("triangle.vert")).unwrap(),
-  ).unwrap();
-
-  let frag_shader = render_gl::Shader::from_frag_source(
-    &gl,
-    &CString::new(include_str!("triangle.frag")).unwrap(),
-  ).unwrap();
-
-  let shader_program = render_gl::Program::from_shaders(
-    &gl,
-    &[vert_shader, frag_shader],
-  ).unwrap();
+  let shader_program = render_gl::Program::from_res(&gl, &res, "shaders/triangle").unwrap();
   shader_program.set_used();
 
   let vertices: Vec<f32> = vec![
@@ -55,9 +47,6 @@ fn main() {
   let mut vbo: gl::types::GLuint = 0;
   unsafe {
     gl.GenBuffers(1, &mut vbo);
-  }
-
-  unsafe {
     gl.BindBuffer(gl::ARRAY_BUFFER, vbo);
     gl.BufferData(
       gl::ARRAY_BUFFER, // target
