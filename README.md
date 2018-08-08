@@ -15,7 +15,10 @@
 5. Add build wasm configuration
 
 `cargo +nightly build --target wasm32-unknown-unknown`
-6. Run wasm-buildgen on generated wasm file
+6. Build wasm 
+Run `build-wasm.bat`
 
-`wasm-bindgen target/wasm32-unknown-unknown/debug/js_hello_world.wasm --out-dir .`
-Can run `convert_wasm.bat` file for this
+### Install rust fmt 
+`rustup component add rustfmt-preview --toolchain nightly`
+
+run as a nightly command
