@@ -1,3 +1,4 @@
+#![feature(tool_attributes)]
 extern crate gl;
 extern crate glutin;
 
@@ -8,6 +9,7 @@ use glutin::{dpi::*, GlContext};
 use resources::Resources;
 use std::path::Path;
 
+#[rustfmt::skip]
 fn main() {
     let res = Resources::from_relative_exe_path(Path::new("assets",),).unwrap();
 
@@ -74,7 +76,7 @@ fn main() {
 
     while running {
         events_loop.poll_events(|event| match event {
-            glutin::Event::WindowEvent { event,, .. } => match event {
+            glutin::Event::WindowEvent { event, .. } => match event {
                 glutin::WindowEvent::CloseRequested => running = false,
                 glutin::WindowEvent::Resized(logical_size,) => {
                     let dpi_factor = gl_window.get_hidpi_factor();
