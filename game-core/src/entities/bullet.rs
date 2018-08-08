@@ -1,10 +1,5 @@
-use entities::BoundingBox;
-use entities::Collider;
-use entities::Color;
-use entities::Drawable;
-use entities::Position;
-use math::pulse_value;
-use math::vector::Vector2d;
+use entities::{BoundingBox, Collider, Color, Drawable, Position};
+use math::{pulse_value, vector::Vector2d};
 
 pub struct Bullet {
     pos: Vector2d,
@@ -18,7 +13,7 @@ pub struct Bullet {
 const VEL: f32 = 300.0;
 
 impl Bullet {
-    pub fn new(pos: Vector2d, direction: Vector2d) -> Bullet {
+    pub fn new(pos: Vector2d, direction: Vector2d,) -> Bullet {
         Bullet {
             pos,
             width: 4.0,
@@ -30,15 +25,15 @@ impl Bullet {
                 a: 1.0,
             },
             life_time: 0.0,
-            vel: direction.mul(VEL),
+            vel: direction.mul(VEL,),
         }
     }
 
-    pub fn update(&mut self, delta: f32) {
-        self.life_time +=delta;
+    pub fn update(&mut self, delta: f32,) {
+        self.life_time += delta;
         self.pos.x += self.vel.x * delta;
         self.pos.y += self.vel.y * delta;
-        self.color.r = pulse_value(0.7, 1.0, self.life_time * 5.0);
+        self.color.r = pulse_value(0.7, 1.0, self.life_time * 5.0,);
     }
 }
 
@@ -47,11 +42,11 @@ impl Position for Bullet {
         self.pos
     }
 
-    fn set_x(&mut self, x: f32) {
+    fn set_x(&mut self, x: f32,) {
         self.pos.x = x;
     }
 
-    fn set_y(&mut self, y: f32) {
+    fn set_y(&mut self, y: f32,) {
         self.pos.y = y;
     }
 }

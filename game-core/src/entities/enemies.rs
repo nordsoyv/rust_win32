@@ -1,11 +1,5 @@
-use entities::BoundingBox;
-use entities::Collider;
-use entities::Color;
-use entities::Drawable;
-use entities::player::Player;
-use entities::Position;
-use math::pulse_value;
-use math::vector::Vector2d;
+use entities::{player::Player, BoundingBox, Collider, Color, Drawable, Position};
+use math::{pulse_value, vector::Vector2d};
 
 pub enum EnemyType {
     Normal,
@@ -21,7 +15,7 @@ pub struct Enemy {
 }
 
 impl Enemy {
-    pub fn new(enemy_type: EnemyType, pos: Vector2d) -> Enemy {
+    pub fn new(enemy_type: EnemyType, pos: Vector2d,) -> Enemy {
         Enemy {
             enemy_type,
             pos,
@@ -37,18 +31,18 @@ impl Enemy {
         }
     }
 
-    pub fn update(&mut self, player: &Player, delta: f32) {
+    pub fn update(&mut self, player: &Player, delta: f32,) {
         self.life_time += delta;
         match self.enemy_type {
             EnemyType::Normal => {
                 let player_pos = player.get_position();
                 let mut current_pos = self.pos;
-                current_pos.sub(&player_pos);
+                current_pos.sub(&player_pos,);
                 current_pos.normalize();
-                current_pos = current_pos.mul(-1.0);
-                self.pos.add(&current_pos);
-                self.width = 10.0 + pulse_value(0.0, 5.0, self.life_time * 10.0);
-                self.height = 10.0 + pulse_value(0.0, 5.0, self.life_time * 7.5);
+                current_pos = current_pos.mul(-1.0,);
+                self.pos.add(&current_pos,);
+                self.width = 10.0 + pulse_value(0.0, 5.0, self.life_time * 10.0,);
+                self.height = 10.0 + pulse_value(0.0, 5.0, self.life_time * 7.5,);
             }
         }
     }
@@ -59,11 +53,11 @@ impl Position for Enemy {
         self.pos
     }
 
-    fn set_x(&mut self, x: f32) {
+    fn set_x(&mut self, x: f32,) {
         self.pos.x = x;
     }
 
-    fn set_y(&mut self, y: f32) {
+    fn set_y(&mut self, y: f32,) {
         self.pos.y = y;
     }
 }

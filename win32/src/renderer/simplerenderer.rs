@@ -1,15 +1,18 @@
 use game_core::entities::Color;
 use libc;
-use std;
-use std::mem;
-use winapi::shared::minwindef::LPVOID;
-use winapi::shared::windef::{HDC, HWND, LPRECT, RECT};
-use winapi::um::memoryapi::{VirtualAlloc, VirtualFree};
-use winapi::um::wingdi::{
-    BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS, RGBQUAD, SRCCOPY, StretchDIBits,
+use std::{self, mem};
+use winapi::{
+    shared::{
+        minwindef::LPVOID,
+        windef::{HDC, HWND, LPRECT, RECT},
+    },
+    um::{
+        memoryapi::{VirtualAlloc, VirtualFree},
+        wingdi::{StretchDIBits, BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS, RGBQUAD, SRCCOPY},
+        winnt::{MEM_COMMIT, MEM_RELEASE, PAGE_READWRITE},
+        winuser::{GetClientRect, GetDC},
+    },
 };
-use winapi::um::winnt::{MEM_COMMIT, MEM_RELEASE, PAGE_READWRITE};
-use winapi::um::winuser::{GetClientRect, GetDC};
 
 struct OffscreenBuffer {
     info: BITMAPINFO,
@@ -33,9 +36,10 @@ pub fn create_simple_renderer(
 ) -> SimpleRenderer {
     {
         unsafe {
-            let dc = GetDC(handle);
-            let lp_rect: LPRECT = libc::malloc(mem::size_of::<RECT>() as libc::size_t) as *mut RECT;
-            GetClientRect(handle, lp_rect);
+            let dc = GetDC(handle,);
+            let lp_rect: LPRECT =
+                libc::malloc(mem::size_of::<RECT,>() as libc::size_t,) as *mut RECT;
+            GetClientRect(handle, lp_rect,);
             let client_width = (*lp_rect).right;
             let client_height = (*lp_rect).bottom;
 
@@ -48,7 +52,7 @@ pub fn create_simple_renderer(
 
                 info: BITMAPINFO {
                     bmiHeader: BITMAPINFOHEADER {
-                        biSize: mem::size_of::<BITMAPINFOHEADER>() as u32,
+                        biSize: mem::size_of::<BITMAPINFOHEADER,>() as u32,
                         biWidth: back_buffer_width,
                         biHeight: back_buffer_height,
                         biPlanes: 1,
@@ -86,7 +90,7 @@ pub fn create_simple_renderer(
 }
 
 impl SimpleRenderer {
-    pub fn draw_rectangle(&self, min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: Color) {
+    pub fn draw_rectangle(&self, min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: Color,) {
         let mut start_x = min_x as i32;
         if start_x < 0 {
             start_x = 0;
@@ -121,7 +125,7 @@ impl SimpleRenderer {
                 let mut offset: isize = self.back_buffer.pitch as isize * y as isize;
                 offset += start_x as isize;
                 for _x in start_x..end_x {
-                    let mut pixel = start_of_memory.offset(offset);
+                    let mut pixel = start_of_memory.offset(offset,);
                     *pixel = c;
                     offset += 1;
                 }
@@ -129,7 +133,7 @@ impl SimpleRenderer {
         }
     }
 
-    fn _render_gradient(&self, x_offset: i32, y_offset: i32) {
+    fn _render_gradient(&self, x_offset: i32, y_offset: i32,) {
         unsafe {
             let start_of_memory = self.back_buffer.memory as *mut u32;
             let mut offset = 0;
@@ -138,7 +142,7 @@ impl SimpleRenderer {
                     offset += 1;
                     let blue: u32 = ((x + x_offset) as u8).into();
                     let green: u32 = ((y + y_offset) as u8).into();
-                    let mut pixel = start_of_memory.offset(offset);
+                    let mut pixel = start_of_memory.offset(offset,);
                     *pixel = green << 8 | blue;
                 }
             }
@@ -147,7 +151,7 @@ impl SimpleRenderer {
 
     pub fn clear_screen(&mut self) {
         unsafe {
-            VirtualFree(self.back_buffer.memory, 0, MEM_RELEASE);
+            VirtualFree(self.back_buffer.memory, 0, MEM_RELEASE,);
             let bitmap_memory_size = self.back_buffer.width * self.back_buffer.height * 4;
             self.back_buffer.memory = VirtualAlloc(
                 std::ptr::null_mut(),
@@ -157,7 +161,8 @@ impl SimpleRenderer {
             )
         }
     }
-    pub fn end_frame(&self){
+
+    pub fn end_frame(&self) {
         unsafe {
             StretchDIBits(
                 self.hdc,

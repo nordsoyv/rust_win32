@@ -1,5 +1,4 @@
-use entities::BoundingBox;
-use entities::Color;
+use entities::{BoundingBox, Color};
 use game_state::GameState;
 
 pub mod entities;
@@ -28,43 +27,43 @@ pub struct GameInput {
 
 pub struct Platform {
     pub random: fn() -> f32,
-    pub log: fn(s:String),
-    pub start_frame : fn (),
-    pub end_frame: fn (),
-    pub draw_rectangle : fn( min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: Color),
+    pub log: fn(s: String,),
+    pub start_frame: fn(),
+    pub end_frame: fn(),
+    pub draw_rectangle: fn(min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: Color,),
 }
 
-static mut GAME_STATE: Option<GameState> = None;
-static mut PLATFORM: Option<Platform> = None;
+static mut GAME_STATE: Option<GameState,> = None;
+static mut PLATFORM: Option<Platform,> = None;
 
-pub fn game_init(size_x: f32, size_y: f32, platform: Platform) {
+pub fn game_init(size_x: f32, size_y: f32, platform: Platform,) {
     unsafe {
-        PLATFORM = Some(platform);
-        GAME_STATE = Some(GameState::new(size_x, size_y))
+        PLATFORM = Some(platform,);
+        GAME_STATE = Some(GameState::new(size_x, size_y,),)
     }
 }
 
-pub fn game_loop(input: GameInput, time_elapsed: f32, delta: f32) -> bool {
+pub fn game_loop(input: GameInput, time_elapsed: f32, delta: f32,) -> bool {
     unsafe {
         assert!(GAME_STATE.is_some());
         match GAME_STATE {
-            Some(ref mut gs) => {
+            Some(ref mut gs,) => {
                 if input.quit_key {
                     return true;
                 }
 
-                gs.update(input, time_elapsed, delta);
-                return false
+                gs.update(input, time_elapsed, delta,);
+                return false;
             }
-            None => {return true}
+            None => return true,
         }
     }
 }
 
-pub fn get_random(min: f32, max: f32) -> f32 {
+pub fn get_random(min: f32, max: f32,) -> f32 {
     unsafe {
         match PLATFORM {
-            Some(ref pf) => {
+            Some(ref pf,) => {
                 return (pf.random)() * (max - min) + min;
             }
             None => {
@@ -77,18 +76,18 @@ pub fn get_random(min: f32, max: f32) -> f32 {
 pub fn log(text: String) {
     unsafe {
         match PLATFORM {
-            Some(ref pf) => {
-                (pf.log)(text);
+            Some(ref pf,) => {
+                (pf.log)(text,);
             }
             None => {}
         }
     }
 }
 
-pub fn start_frame(){
-    unsafe{
+pub fn start_frame() {
+    unsafe {
         match PLATFORM {
-            Some(ref pf) => {
+            Some(ref pf,) => {
                 (pf.start_frame)();
             }
             None => {}
@@ -96,10 +95,10 @@ pub fn start_frame(){
     }
 }
 
-pub fn end_frame(){
-    unsafe{
+pub fn end_frame() {
+    unsafe {
         match PLATFORM {
-            Some(ref pf) => {
+            Some(ref pf,) => {
                 (pf.end_frame)();
             }
             None => {}
@@ -107,18 +106,16 @@ pub fn end_frame(){
     }
 }
 
-pub fn draw_rectangle(min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: Color){
-    unsafe{
+pub fn draw_rectangle(min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: Color,) {
+    unsafe {
         match PLATFORM {
-            Some(ref pf) => {
-
-                (pf.draw_rectangle)(min_x,min_y,max_x,max_y,color);
+            Some(ref pf,) => {
+                (pf.draw_rectangle)(min_x, min_y, max_x, max_y, color,);
             }
             None => {}
         }
     }
 }
-
 
 impl GameInput {
     pub fn new() -> GameInput {
@@ -137,7 +134,6 @@ impl GameInput {
     }
 }
 
-
 struct GameTime {
     pub time_elapsed: f32,
     pub delta: f32,
@@ -151,6 +147,3 @@ impl GameTime {
         }
     }
 }
-
-
-

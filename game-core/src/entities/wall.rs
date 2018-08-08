@@ -1,8 +1,4 @@
-use entities::BoundingBox;
-use entities::Collider;
-use entities::Color;
-use entities::Drawable;
-use entities::Position;
+use entities::{BoundingBox, Collider, Color, Drawable, Position};
 use math::vector::Vector2d;
 
 pub struct Wall {
@@ -13,7 +9,7 @@ pub struct Wall {
 }
 
 impl Wall {
-    pub fn new(pos: Vector2d, width: f32, height: f32) -> Wall {
+    pub fn new(pos: Vector2d, width: f32, height: f32,) -> Wall {
         Wall {
             pos,
             width,
@@ -33,11 +29,11 @@ impl Position for Wall {
         self.pos
     }
 
-    fn set_x(&mut self, x: f32) {
+    fn set_x(&mut self, x: f32,) {
         self.pos.x = x;
     }
 
-    fn set_y(&mut self, y: f32) {
+    fn set_y(&mut self, y: f32,) {
         self.pos.y = y;
     }
 }

@@ -16,8 +16,8 @@ pub struct Color {
 
 pub trait Position {
     fn get_position(&self) -> Vector2d;
-    fn set_x(&mut self, x: f32);
-    fn set_y(&mut self, y: f32);
+    fn set_x(&mut self, x: f32,);
+    fn set_y(&mut self, y: f32,);
 }
 
 pub trait Collider: Position {

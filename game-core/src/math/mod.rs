@@ -1,6 +1,6 @@
 pub mod vector;
 
-pub fn pulse_value(min: f32, max: f32, inc_value: f32) -> f32 {
+pub fn pulse_value(min: f32, max: f32, inc_value: f32,) -> f32 {
     assert!(min < max);
     let mut value = inc_value.sin();
     value += 1.0;

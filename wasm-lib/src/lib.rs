@@ -6,19 +6,24 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate wasm_bindgen;
 
-use game_core::game_init;
-use game_core::game_loop;
-use game_core::GameInput;
+use game_core::{entities::Color, game_init, game_loop, GameInput};
 use wasm_bindgen::prelude::*;
-use game_core::entities::Color;
 
 #[wasm_bindgen(module = "./platform")]
-extern {
+extern "C" {
     fn random() -> f32;
     fn log(s: String);
     fn start_frame();
     fn end_frame();
-    fn draw_rectangle(min_x: f32, min_y: f32, max_x: f32, max_y: f32, red: f32, green: f32, blue: f32);
+    fn draw_rectangle(
+        min_x: f32,
+        min_y: f32,
+        max_x: f32,
+        max_y: f32,
+        red: f32,
+        green: f32,
+        blue: f32,
+    );
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -34,7 +39,6 @@ pub struct PlayerInput {
     pub quit_key: bool,
     pub space: bool,
 }
-
 
 impl PlayerInput {
     fn to_game_input(&self) -> GameInput {
@@ -53,8 +57,8 @@ impl PlayerInput {
     }
 }
 
-fn draw_rectangle_inner (min_x: f32, min_y: f32, max_x: f32, max_y: f32, color:Color) {
-    draw_rectangle(min_x,min_y,max_x,max_y,color.r,color.g,color.b);
+fn draw_rectangle_inner(min_x: f32, min_y: f32, max_x: f32, max_y: f32, color: Color,) {
+    draw_rectangle(min_x, min_y, max_x, max_y, color.r, color.g, color.b,);
 }
 
 #[wasm_bindgen]
@@ -64,17 +68,16 @@ pub fn init() {
         log,
         start_frame,
         end_frame,
-        draw_rectangle: draw_rectangle_inner
+        draw_rectangle: draw_rectangle_inner,
     };
-    game_init(960.0, 540.0, platform);
+    game_init(960.0, 540.0, platform,);
 }
 
 #[wasm_bindgen]
-pub fn update(input_string: String, time_elapsed: f32, delta: f32)  {
-    let input: PlayerInput = serde_json::from_str(&input_string).unwrap();
-    game_loop(input.to_game_input(), time_elapsed, delta);
+pub fn update(input_string: String, time_elapsed: f32, delta: f32,) {
+    let input: PlayerInput = serde_json::from_str(&input_string,).unwrap();
+    game_loop(input.to_game_input(), time_elapsed, delta,);
 }
-
 
 #[test]
 fn test_loop() {
@@ -84,7 +87,7 @@ fn test_loop() {
     let p = Platform {
         random: test_random,
     };
-    game_init(960.0, 540.0, p);
+    game_init(960.0, 540.0, p,);
     let g = GameInput {
         up_key: false,
         down_key: false,
@@ -97,6 +100,6 @@ fn test_loop() {
         quit_key: false,
         space: false,
     };
-    let ret = game_loop(g, 0.1, 0.1);
+    let ret = game_loop(g, 0.1, 0.1,);
     println!("{:?}", ret);
 }
