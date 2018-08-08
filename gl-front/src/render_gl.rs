@@ -26,7 +26,8 @@ impl Program {
             .iter()
             .map(
                 |file_extension| Shader::from_res(gl, res, &format!("{}{}", name, file_extension),),
-            ).collect::<Result<Vec<Shader,>, Error,>>()?;
+            )
+            .collect::<Result<Vec<Shader,>, Error,>>()?;
 
         Program::from_shaders(gl, &shaders[..],).map_err(|message| Error::LinkError {
             name: name.into(),
