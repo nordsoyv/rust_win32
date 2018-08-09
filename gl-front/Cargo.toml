@@ -6,6 +6,7 @@ authors = ["Øyvind <oyvind.nordsveen@gmail.com>"]
 [dependencies]
 glutin = "0.17.0"
 gl = { path = "../gl" }
+failure = "0.1"
 
 [build-dependencies]
 walkdir = "2.1"
