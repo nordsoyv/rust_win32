@@ -7,6 +7,7 @@ authors = ["Øyvind <oyvind.nordsveen@gmail.com>"]
 glutin = "0.17.0"
 gl = { path = "../gl" }
 failure = "0.1"
+game-derive = { path = "../game-derive"}
 
 [build-dependencies]
 walkdir = "2.1"
