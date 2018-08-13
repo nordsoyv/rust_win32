@@ -4,10 +4,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Debug)]
+#[derive(Debug, Fail)]
 pub enum Error {
+    #[fail(display = "Failed to get executable path")]
     FailedToGetExePath,
-    Io(io::Error,),
+    #[fail(display = "I/O error")]
+    Io(#[cause] io::Error,),
+    #[fail(display = "Failed to read CString that contains 0")]
     FileContainsNil,
 }
 

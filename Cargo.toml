@@ -4,5 +4,6 @@ members = [
     "game-core",
     "wasm-lib",
     "gl-front",
-    "gl"
+    "gl",
+    "game-derive"
 ]

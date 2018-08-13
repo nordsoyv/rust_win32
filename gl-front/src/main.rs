@@ -2,16 +2,58 @@
 extern crate gl;
 extern crate glutin;
 
+#[macro_use]
+extern crate game_derive;
+
+#[macro_use]
+extern crate failure;
+
 mod render_gl;
 mod resources;
 
 use glutin::{dpi::*, GlContext};
+use render_gl::data;
 use resources::Resources;
 use std::path::Path;
 
-#[rustfmt::skip]
+#[derive(VertexAttribPointers, Copy, Clone, Debug)]
+#[repr(C, packed)]
+struct Vertex {
+    #[location = "0"]
+    pos: data::f32_f32_f32,
+    #[location = "1"]
+    clr: data::f32_f32_f32,
+}
+
+//impl Vertex {
+//    fn vertex_attrib_pointers(gl: &gl::Gl) {
+//        let stride = std::mem::size_of::<Self,>();
+//        let location = 0;
+//        let offset = 0;
+//
+//        unsafe {
+//            data::f32_f32_f32::vertex_attrib_pointer(gl, stride, location, offset,);
+//        }
+//        let location = 1;
+//        let offset = offset + std::mem::size_of::<data::f32_f32_f32,>();
+//
+//        unsafe {
+//            data::f32_f32_f32::vertex_attrib_pointer(gl, stride, location, offset,);
+//        }
+//    }
+//}
+
 fn main() {
-    let res = Resources::from_relative_exe_path(Path::new("assets",),).unwrap();
+    let res = run();
+    match res {
+        Err(e,) => println!("{}", failure_to_string(e)),
+        _ => {}
+    }
+}
+
+#[rustfmt::skip]
+fn run() -> Result<(), failure::Error> {
+    let res = Resources::from_relative_exe_path(Path::new("assets",),)?;
 
     let mut events_loop = glutin::EventsLoop::new();
     let window = glutin::WindowBuilder::new()
@@ -33,23 +75,25 @@ fn main() {
 
     let mut running = true;
 
-    use std::ffi::CString;
-
-    let shader_program = render_gl::Program::from_res(&gl, &res, "shaders/triangle",).unwrap();
+    let shader_program = render_gl::Program::from_res(&gl, &res, "shaders/triangle",)?;
     shader_program.set_used();
 
-    let vertices: Vec<f32,> = vec![-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.0, 0.5, 0.0];
-
+    let vertices: Vec<Vertex> = vec![
+        // positions      // colors
+        Vertex { pos: (0.5, -0.5, 0.0).into(), clr: (1.0, 0.0, 0.0).into() },
+        Vertex { pos: (-0.5, -0.5, 0.0).into(), clr: (0.0, 1.0, 0.0).into() },
+        Vertex { pos: (0.0, 0.5, 0.0).into(), clr: (0.0, 0.0, 1.0).into() },
+    ];
     let mut vbo: gl::types::GLuint = 0;
     unsafe {
         gl.GenBuffers(1, &mut vbo,);
         gl.BindBuffer(gl::ARRAY_BUFFER, vbo,);
         gl.BufferData(
-      gl::ARRAY_BUFFER, // target
-      (vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr, // size of data in bytes
-      vertices.as_ptr() as *const gl::types::GLvoid, // pointer to data
-      gl::STATIC_DRAW, // usage
-    );
+            gl::ARRAY_BUFFER, // target
+            (vertices.len() * std::mem::size_of::<Vertex>()) as gl::types::GLsizeiptr, // size of data in bytes
+            vertices.as_ptr() as *const gl::types::GLvoid, // pointer to data
+            gl::STATIC_DRAW, // usage
+        );
         gl.BindBuffer(gl::ARRAY_BUFFER, 0,); // unbind the buffer
     }
 
@@ -61,15 +105,7 @@ fn main() {
     unsafe {
         gl.BindVertexArray(vao,);
         gl.BindBuffer(gl::ARRAY_BUFFER, vbo,);
-        gl.EnableVertexAttribArray(0,); // this is "layout (location = 0)" in vertex shader
-        gl.VertexAttribPointer(
-      0, // index of the generic vertex attribute ("layout (location = 0)")
-      3, // the number of components per generic vertex attribute
-      gl::FLOAT, // data type
-      gl::FALSE, // normalized (int-to-float conversion)
-      (3 * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
-      std::ptr::null(), // offset of the first component
-    );
+        Vertex::vertex_attrib_pointers(&gl);
         gl.BindBuffer(gl::ARRAY_BUFFER, 0,);
         gl.BindVertexArray(0,);
     }
@@ -102,4 +138,36 @@ fn main() {
         }
         gl_window.swap_buffers().unwrap();
     }
+    Ok((),)
+}
+
+pub fn failure_to_string(e: failure::Error) -> String {
+    use std::fmt::Write;
+
+    let mut result = String::new();
+
+    for (i, cause,) in e
+        .iter_chain()
+        .collect::<Vec<_,>>()
+        .into_iter()
+        .rev()
+        .enumerate()
+    {
+        if i > 0 {
+            let _ = writeln!(&mut result, "   Which caused the following issue:");
+        }
+        let _ = write!(&mut result, "{}", cause);
+        if let Some(backtrace,) = cause.backtrace() {
+            let backtrace_str = format!("{}", backtrace);
+            if backtrace_str.len() > 0 {
+                let _ = writeln!(&mut result, " This happened at {}", backtrace);
+            } else {
+                let _ = writeln!(&mut result);
+            }
+        } else {
+            let _ = writeln!(&mut result);
+        }
+    }
+
+    result
 }
