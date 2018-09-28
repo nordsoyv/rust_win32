@@ -7,7 +7,42 @@
       <sourceFolder url="file://$MODULE_DIR$/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/game-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/game-core/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/game-core/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/game-core/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/gl-front/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/gl-front/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/gl-front/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/gl-front/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/win32/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/win32/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/win32/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/win32/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/wasm-lib/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/wasm-lib/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/wasm-lib/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/wasm-lib/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/game-derive/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/game-derive/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/game-derive/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/game-derive/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/gl/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/gl/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/gl/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/gl/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/vulkan-front/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/vulkan-front/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/vulkan-front/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/vulkan-front/benches" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/game-core/target" />
+      <excludeFolder url="file://$MODULE_DIR$/game-derive/target" />
+      <excludeFolder url="file://$MODULE_DIR$/gl-front/target" />
+      <excludeFolder url="file://$MODULE_DIR$/gl/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
+      <excludeFolder url="file://$MODULE_DIR$/vulkan-front/target" />
+      <excludeFolder url="file://$MODULE_DIR$/wasm-lib/target" />
+      <excludeFolder url="file://$MODULE_DIR$/win32/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
