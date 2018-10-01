@@ -8,6 +8,9 @@ extern crate game_derive;
 #[macro_use]
 extern crate failure;
 
+extern crate half;
+extern crate vec_2_10_10_10;
+
 mod render_gl;
 mod resources;
 
@@ -24,24 +27,6 @@ struct Vertex {
     #[location = "1"]
     clr: data::f32_f32_f32,
 }
-
-//impl Vertex {
-//    fn vertex_attrib_pointers(gl: &gl::Gl) {
-//        let stride = std::mem::size_of::<Self,>();
-//        let location = 0;
-//        let offset = 0;
-//
-//        unsafe {
-//            data::f32_f32_f32::vertex_attrib_pointer(gl, stride, location, offset,);
-//        }
-//        let location = 1;
-//        let offset = offset + std::mem::size_of::<data::f32_f32_f32,>();
-//
-//        unsafe {
-//            data::f32_f32_f32::vertex_attrib_pointer(gl, stride, location, offset,);
-//        }
-//    }
-//}
 
 fn main() {
     let res = run();

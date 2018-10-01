@@ -8,6 +8,8 @@ glutin = "0.17.0"
 gl = { path = "../gl" }
 failure = "0.1"
 game-derive = { path = "../game-derive"}
+vec-2-10-10-10 = "0.1.2"
+half = "1.2.0"
 
 [build-dependencies]
 walkdir = "2.1"
